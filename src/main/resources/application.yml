@@ -1,0 +1,17 @@
+spring:
+  profiles:
+    active: mail,custom
+
+server:
+  port: 8000
+  servlet:
+    context-path: /netdisk
+    session:
+      #session过期时间 60M 一个小时
+      timeout: PT60M
+
+#    #处理favicon
+#    spring.mvc.favicon.enable=false
+#    #异常处理
+#    spring.mvc.throw-exception-if-no-handler-found=true
+#    spring.web.resources.add-mappings=false
