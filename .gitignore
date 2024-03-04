@@ -37,6 +37,6 @@ build/
 ### Mac OS ###
 .DS_Store
 
+#忽略日志和springboot的yml配置文件
 logs/
 *.yml
-.idea/workspace.xml
