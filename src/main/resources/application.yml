@@ -7,8 +7,8 @@ server:
   servlet:
     context-path: /netdisk
     session:
-      #session过期时间 60M 一个小时
-      timeout: PT60M
+      #session过期时间 30分钟
+      timeout: 30m
 
 #    #处理favicon
 #    spring.mvc.favicon.enable=false
