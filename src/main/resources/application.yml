@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: mail,custom
+    active: mail,custom,mysql,mybatis
 
 server:
   port: 8000
