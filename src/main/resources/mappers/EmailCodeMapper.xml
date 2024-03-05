@@ -3,5 +3,11 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.netdisk.mappers.EmailCodeMapper">
+    <insert id="insert">
+        insert into email_code (email,code,create_time) values (#{email},#{code},#{createTime})
+    </insert>
 
+    <update id="disableEmailCode">
+        update email_code set status=1 where email=#{email} and status=0
+    </update>
 </mapper>

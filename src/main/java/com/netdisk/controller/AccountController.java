@@ -3,7 +3,7 @@ package com.netdisk.controller;
 import com.netdisk.utils.CreateImageCode;
 import com.netdisk.exception.BusinessException;
 import com.netdisk.service.AccountService;
-import com.netdisk.vo.ResponseVO;
+import com.netdisk.utils.ResponseVO;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,7 @@ public class AccountController {
     public ResponseVO sendEmailCode(HttpSession session,String email,String checkCode,Integer type){
         try {
             //校验验证码
-            if(!checkCode.equalsIgnoreCase((String) session.getAttribute("check_code_key_email")){
+            if(!checkCode.equalsIgnoreCase((String) session.getAttribute("check_code_key_email"))){
                 throw new BusinessException("图片验证码不正确");
             }
             //生成邮箱验证码
