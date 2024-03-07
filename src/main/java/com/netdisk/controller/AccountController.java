@@ -1,11 +1,12 @@
 package com.netdisk.controller;
 
-import com.netdisk.utils.CreateImageCode;
 import com.netdisk.exception.BusinessException;
 import com.netdisk.service.AccountService;
+import com.netdisk.utils.CreateImageCode;
 import com.netdisk.utils.ResponseVO;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,11 +19,11 @@ import java.io.IOException;
 public class AccountController {
 
     @Autowired
-    AccountService accountService;
+    private AccountService accountService;
 
     //获取验证码图片
     @RequestMapping("checkCode")
-    public void checkCode(HttpServletResponse response, HttpSession session,Integer type) throws IOException {
+    public void checkCode(HttpServletResponse response, Integer type) throws IOException {
         CreateImageCode vCode = new CreateImageCode(130, 38, 5, 10);
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Cache-Control", "no-cache");
@@ -30,36 +31,51 @@ public class AccountController {
         response.setContentType("image/jpeg");
         String code = vCode.getCode();
         if (type == null || type == 0) {
-            //type默认为0.生成登录注册的验证码
-            session.setAttribute("check_code_key", code);
-            System.out.println(session.getId());
-            System.out.println(session.getAttribute("check_code_key"));
+            //type默认为0.生成登录注册的验证码并存储到Cookie
+            Cookie cookie = new Cookie("check_code_key", code);
+            cookie.setPath("/"); // 设置Cookie适用的路径
+            cookie.setHttpOnly(true); // 增加安全性，防止JS直接访问
+            cookie.setMaxAge(5 * 60); // 设置Cookie的存活时间，例如5分钟
+            response.addCookie(cookie);
         } else {
             //type为1时，生成邮箱验证码
-            session.setAttribute("check_code_key_email", code);
-            System.out.println(session.getId());
-            System.out.println(session.getAttribute("check_code_key_email"));
+            Cookie cookie = new Cookie("check_code_key_email", code);
+            cookie.setPath("/"); // 设置Cookie适用的路径
+            cookie.setHttpOnly(true); // 增加安全性，防止JS直接访问
+            cookie.setMaxAge(5 * 60); // 设置Cookie的存活时间，例如5分钟
+            response.addCookie(cookie);
         }
         vCode.write(response.getOutputStream());
     }
 
     //获取邮箱验证码
     @PostMapping("sendEmailCode")
-    public ResponseVO sendEmailCode(HttpSession session,String email,String checkCode,Integer type){
-        try {
-            //校验验证码
-            if(!checkCode.equalsIgnoreCase((String) session.getAttribute("check_code_key_email"))){
-                System.out.println(session.getId());
-                System.out.println(session.getAttribute("check_code_key_email"));
-                System.out.println(session.getAttribute("check_code_key"));
-                throw new BusinessException("图片验证码不正确");
+    public ResponseVO sendEmailCode(HttpServletRequest request, HttpServletResponse response,String email, String checkCode, Integer type){
+        // 从请求中获取Cookie中的验证码
+        String codeFromCookie = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("check_code_key_email".equals(cookie.getName())) {
+                    codeFromCookie = cookie.getValue();
+                    //获取后立即过期
+                    cookie.setMaxAge(0);
+                    response.addCookie(cookie);
+                    break;
+                }
             }
-            //生成邮箱验证码
-            accountService.sendEmailCode(email,type);
-            return ResponseVO.getSuccessResponseVO(null);
-        }finally {
-            session.removeAttribute("check_code_key_email");//重置验证码
         }
+        //cookie超时失效
+        if(codeFromCookie==null){
+            throw new BusinessException("验证码已超时，请刷新");
+        }
+        //校验验证码
+        if(!checkCode.equalsIgnoreCase(codeFromCookie)){//忽略大小写
+            throw new BusinessException("图片验证码不正确");
+        }
+        //发送邮箱验证码
+        accountService.sendEmailCode(email,type);
+        return ResponseVO.getSuccessResponseVO(null);
     }
 
 }
