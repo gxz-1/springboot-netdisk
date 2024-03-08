@@ -58,6 +58,7 @@
         </dependency>
 
         <dependency>
+<!--            实现了MD5加密-->
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.9</version>

@@ -4,8 +4,61 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.netdisk.mappers.UserInfoMapper">
 
-        <!-- 取别名后,默认的别名:类名的小写-->
-        <select id="selectByEmail" resultType="userInfo">
-                select * from user_info where email=#{email}
-        </select>
+    <!-- 取别名后,默认的别名:类名的小写-->
+    <select id="selectByEmail" resultType="userInfo">
+            select * from user_info where email=#{email}
+    </select>
+
+    <select id="selectBynickName" resultType="userInfo">
+        select * from user_info where nick_name=#{nickName}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO user_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="nickName != null">nick_name,</if>
+            <if test="email != null">email,</if>
+            <if test="qqOpenId != null">qq_open_id,</if>
+            <if test="qqAvatar != null">qq_avatar,</if>
+            <if test="password != null">password,</if>
+            <if test="joinTime != null">join_time,</if>
+            <if test="lastLoginTime != null">last_login_time,</if>
+            <if test="status != null">status,</if>
+            <if test="useSpace != null">use_space,</if>
+            <if test="totalSpace != null">total_space</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="email != null">#{email},</if>
+            <if test="qqOpenId != null">#{qqOpenId},</if>
+            <if test="qqAvatar != null">#{qqAvatar},</if>
+            <if test="password != null">#{password},</if>
+            <if test="joinTime != null">#{joinTime},</if>
+            <if test="lastLoginTime != null">#{lastLoginTime},</if>
+            <if test="status != null">#{status},</if>
+            <if test="useSpace != null">#{useSpace},</if>
+            <if test="totalSpace != null">#{totalSpace}</if>
+        </trim>
+    </insert>
+
+    <update id="updateUserInfo">
+        UPDATE user_info
+        <set>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="qqOpenId != null">qq_open_id = #{qqOpenId},</if>
+            <if test="qqAvatar != null">qq_avatar = #{qqAvatar},</if>
+            <if test="password != null">password = #{password},</if>
+            <if test="joinTime != null">join_time = #{joinTime},</if>
+            <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="useSpace != null">use_space = #{useSpace},</if>
+            <if test="totalSpace != null">total_space = #{totalSpace}</if>
+        </set>
+        WHERE user_id = #{userId};
+    </update>
+
+
 </mapper>

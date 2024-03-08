@@ -3,13 +3,14 @@ package com.netdisk.controller;
 import com.netdisk.exception.BusinessException;
 import com.netdisk.service.AccountService;
 import com.netdisk.utils.CreateImageCode;
-import com.netdisk.utils.ResponseVO;
+import com.netdisk.vo.ResponseVO;
+import com.netdisk.vo.UserLoginVo;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -49,8 +50,9 @@ public class AccountController {
     }
 
     //获取邮箱验证码
-    @PostMapping("sendEmailCode")
-    public ResponseVO sendEmailCode(HttpServletRequest request, HttpServletResponse response,String email, String checkCode, Integer type){
+    @RequestMapping(value = "sendEmailCode",method = RequestMethod.POST)
+    public ResponseVO sendEmailCode(HttpServletRequest request, HttpServletResponse response,
+                                    String email, String checkCode, Integer type){
         // 从请求中获取Cookie中的验证码
         String codeFromCookie = null;
         Cookie[] cookies = request.getCookies();
@@ -59,6 +61,7 @@ public class AccountController {
                 if ("check_code_key_email".equals(cookie.getName())) {
                     codeFromCookie = cookie.getValue();
                     //获取后立即过期
+                    cookie.setPath("/");
                     cookie.setMaxAge(0);
                     response.addCookie(cookie);
                     break;
@@ -76,6 +79,74 @@ public class AccountController {
         //发送邮箱验证码
         accountService.sendEmailCode(email,type);
         return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    //用户注册
+    @RequestMapping(value = "register",method = RequestMethod.POST)
+    public ResponseVO register(HttpServletRequest request, HttpServletResponse response,
+                               String email,String nickName,String password,String checkCode,String emailCode){
+        // 从请求中获取Cookie中的验证码
+        String codeFromCookie = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("check_code_key".equals(cookie.getName())) {
+                    codeFromCookie = cookie.getValue();
+                    //获取后立即过期
+                    cookie.setPath("/");
+                    cookie.setMaxAge(0);
+                    response.addCookie(cookie);
+                    break;
+                }
+            }
+        }
+        //cookie超时失效
+        if(codeFromCookie==null){
+            throw new BusinessException("验证码已超时，请刷新");
+        }
+        //校验验证码
+        if(!checkCode.equalsIgnoreCase(codeFromCookie)){//忽略大小写
+            throw new BusinessException("图片验证码不正确");
+        }
+        accountService.checkEmailCode(email,emailCode);
+        accountService.register(email,nickName,password);
+
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    //用户登录
+    @RequestMapping(value = "login",method = RequestMethod.POST)
+    public ResponseVO login(HttpServletRequest request, HttpServletResponse response,
+                               String email,String password,String checkCode){
+        // 从请求中获取Cookie中的验证码
+        String codeFromCookie = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("check_code_key".equals(cookie.getName())) {
+                    codeFromCookie = cookie.getValue();
+                    //获取后立即过期
+                    cookie.setPath("/");
+                    cookie.setMaxAge(0);
+                    response.addCookie(cookie);
+                    break;
+                }
+            }
+        }
+        //cookie超时失效
+        if(codeFromCookie==null){
+            throw new BusinessException("验证码已超时，请刷新");
+        }
+        //校验验证码
+        if(!checkCode.equalsIgnoreCase(codeFromCookie)){//忽略大小写
+            throw new BusinessException("图片验证码不正确");
+        }
+        //登录
+        UserLoginVo userLoginVo = accountService.login(email,password);
+        //添加到cookie并返回
+        response.addCookie(new Cookie("nickName", userLoginVo.getNickName()));
+        response.addCookie(new Cookie("userId", userLoginVo.getUserId()));
+        return ResponseVO.getSuccessResponseVO(userLoginVo);
     }
 
 }

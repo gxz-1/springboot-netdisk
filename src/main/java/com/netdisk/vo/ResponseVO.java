@@ -1,4 +1,4 @@
-package com.netdisk.utils;
+package com.netdisk.vo;
 
 import com.netdisk.enums.ResponseCodeEnum;
 import lombok.Data;

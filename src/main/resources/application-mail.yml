@@ -8,7 +8,7 @@ spring:
     # 配置用户的账号
     username: 1311540039@qq.com
     # 配置用户的密码
-    password:
+    password: dxwhzfivxvegjcif
     # 配置默认编码
     default-encoding: UTF-8
     properties:

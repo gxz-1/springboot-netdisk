@@ -4,6 +4,11 @@ log:
   #日志目录
   path: logs
 
+my:
+  #邮箱验证码的过期时间,单位：分钟
+  invalidEmailTime: 5
+  #用户的网盘空间,单位:MB
+  TotalSpace: 500
 
 #  #超级管理员id
 #admin.emails=test@qq.com

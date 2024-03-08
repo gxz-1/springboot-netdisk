@@ -10,4 +10,8 @@
     <update id="disableEmailCode">
         update email_code set status=1 where email=#{email} and status=0
     </update>
+
+    <select id="selectByEmailAndCode" resultType="com.netdisk.pojo.EmailCode">
+        select * from email_code where email=#{email} and code=#{code}
+    </select>
 </mapper>
