@@ -8,12 +8,13 @@
     </appender>
 
 <!--    source指定springboot中的自定义配置项-->
+    <springProperty scope="context" name="my.outFileFolder" source="my.outFileFolder"/>
     <springProperty scope="context" name="log.path" source="log.path"/>
     <springProperty scope="context" name="log.level" source="log.level"/>
     <property name="LOG_FILE_NAME" value="netdisk.log"/>
 
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${log.path}/${LOG_FILE_NAME}</file>
+        <file>${my.outFileFolder}/${log.path}/${LOG_FILE_NAME}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>${log.path}/${LOG_FOLDER}/${LOG_FILE_NAME}.%d{yyyyMMdd}.%i</FileNamePattern>
             <cleanHistoryOnStart>true</cleanHistoryOnStart>

@@ -10,4 +10,6 @@ public interface AccountService {
     void register(String email, String nickName, String password);
 
     UserLoginVo login(String email, String password);
+
+    void resetPwd(String email, String password);
 }

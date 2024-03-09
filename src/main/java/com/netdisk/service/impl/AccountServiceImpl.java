@@ -1,6 +1,7 @@
 package com.netdisk.service.impl;
 
-import com.netdisk.exception.BusinessException;
+import com.netdisk.enums.ResponseCodeEnum;
+import com.netdisk.advice.BusinessException;
 import com.netdisk.mappers.EmailCodeMapper;
 import com.netdisk.mappers.UserInfoMapper;
 import com.netdisk.pojo.EmailCode;
@@ -10,7 +11,6 @@ import com.netdisk.utils.StringTools;
 import com.netdisk.vo.UserLoginVo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -51,7 +51,7 @@ public class AccountServiceImpl implements AccountService {
         if(type==0){
             UserInfo userInfo=userInfoMapper.selectByEmail(email);
             if(userInfo!=null){
-                throw new BusinessException("邮箱已经被用户使用");
+                throw new BusinessException(ResponseCodeEnum.CODE_804);
             }
         }
         //1.生成长度为5的随机数
@@ -79,7 +79,7 @@ public class AccountServiceImpl implements AccountService {
             helper.setSentDate(new Date());
             mailSender.send(message);
         } catch (MessagingException e) {
-            throw new BusinessException("邮件发送失败");
+            throw new BusinessException(ResponseCodeEnum.CODE_805);
         }
     }
 
@@ -88,11 +88,11 @@ public class AccountServiceImpl implements AccountService {
     public void checkEmailCode(String email, String code) {
         EmailCode emailCode = emailCodeMapper.selectByEmailAndCode(email,code);
         if(emailCode==null){
-            throw new BusinessException("邮箱验证失败");
+            throw new BusinessException(ResponseCodeEnum.CODE_806);
         }
         long diffMinutes = (new Date().getTime() - emailCode.getCreateTime().getTime()) / (60 * 1000);
         if(emailCode.getStatus()==1 || diffMinutes > 5){
-            throw new BusinessException("邮箱验证已失效，请重试");
+            throw new BusinessException(ResponseCodeEnum.CODE_807);
         }
     }
 
@@ -101,13 +101,13 @@ public class AccountServiceImpl implements AccountService {
     public void register(String email, String nickName, String password) {
         //要求昵称全局唯一
         if(userInfoMapper.selectBynickName(nickName)!=null){
-            throw new BusinessException("昵称已经存在");
+            throw new BusinessException(ResponseCodeEnum.CODE_808);
         }
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(StringTools.getRandomNumber(10));
         userInfo.setNickName(nickName);
         userInfo.setEmail(email);
-        userInfo.setPassword(DigestUtils.md5Hex(password));
+        userInfo.setPassword(StringTools.encodeByMD5(password));
         userInfo.setJoinTime(new Date());
         userInfo.setUseSpace(0l);
         userInfo.setTotalSpace(TotalSpace*1024*1024);
@@ -120,20 +120,24 @@ public class AccountServiceImpl implements AccountService {
         //校验密码和用户状态status
         UserInfo userInfo = userInfoMapper.selectByEmail(email);
         if(userInfo==null || !userInfo.getPassword().equals(password)){//前端已将密码加密
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException(ResponseCodeEnum.CODE_809);
         }
         if(userInfo.getStatus()==1){
-            throw new BusinessException("账号已停用");
+            throw new BusinessException(ResponseCodeEnum.CODE_810);
         }
         //更新登录时间
         userInfo.setLastLoginTime(new Date());
         userInfoMapper.updateUserInfo(userInfo);
         //设置返回vo
-        UserLoginVo userLoginVo = new UserLoginVo();
-        userLoginVo.setNickName(userInfo.getNickName());
-        userLoginVo.setUserId(userInfo.getUserId());
-        userLoginVo.setAdmin(false);//TODO: 暂时不处理管理员相关逻辑
-        userLoginVo.setAvatar(null);//TODO: 后续设置
+        UserLoginVo userLoginVo = new UserLoginVo(userInfo);
         return userLoginVo;
+    }
+
+    //修改密码
+    @Override
+    public void resetPwd(String email, String password) {
+        UserInfo userInfo = userInfoMapper.selectByEmail(email);
+        userInfo.setPassword(StringTools.encodeByMD5(password));//更新密码
+        userInfoMapper.updateUserInfo(userInfo);
     }
 }

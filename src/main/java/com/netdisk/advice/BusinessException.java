@@ -1,8 +1,9 @@
-package com.netdisk.exception;
+package com.netdisk.advice;
 
 
 import com.netdisk.enums.ResponseCodeEnum;
 
+//自定义的事务异常，结合全局异常处理向前端返回错误信息
 public class BusinessException extends RuntimeException {
 
     private ResponseCodeEnum codeEnum;

@@ -10,8 +10,9 @@ server:
       #session过期时间 30分钟
       timeout: 30m
 
-#    #处理favicon
+#    #处理favicon 这个配置项用于禁用Spring Boot自动处理favicon.ico（网站图标）的功能
 #    spring.mvc.favicon.enable=false
 #    #异常处理
 #    spring.mvc.throw-exception-if-no-handler-found=true
+#果没有找到匹配的处理器，Spring MVC将不会简单地返回404状态码，而是会抛出一个异常。这对于想要在全局异常处理中捕获并处理这种情况的应用来说很有用。
 #    spring.web.resources.add-mappings=false

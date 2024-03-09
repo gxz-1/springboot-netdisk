@@ -18,4 +18,12 @@ public class ResponseVO<T> {
         responseVO.setData(t);
         return responseVO;
     }
+
+    public static  <T> ResponseVO getBusinessExceptionVO(ResponseCodeEnum codeEnum) {
+        ResponseVO<T> responseVO = new ResponseVO<>();
+        responseVO.setStatus("error");
+        responseVO.setCode(codeEnum.getCode());
+        responseVO.setInfo(codeEnum.getMsg());
+        return responseVO;
+    }
 }

@@ -1,6 +1,6 @@
 package com.netdisk;
 
-import com.netdisk.exception.BusinessException;
+import com.netdisk.advice.BusinessException;
 import com.netdisk.utils.StringTools;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

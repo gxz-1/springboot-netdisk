@@ -1,19 +1,30 @@
 package com.netdisk.controller;
 
-import com.netdisk.exception.BusinessException;
+import com.netdisk.enums.ResponseCodeEnum;
+import com.netdisk.advice.BusinessException;
+import com.netdisk.mappers.UserInfoMapper;
+import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.AccountService;
+import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.CreateImageCode;
+import com.netdisk.utils.FileTools;
+import com.netdisk.utils.StringTools;
 import com.netdisk.vo.ResponseVO;
 import com.netdisk.vo.UserLoginVo;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("api")
@@ -21,6 +32,9 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private UserInfoMapper userInfoMapper;
 
     //获取验证码图片
     @RequestMapping("checkCode")
@@ -33,18 +47,10 @@ public class AccountController {
         String code = vCode.getCode();
         if (type == null || type == 0) {
             //type默认为0.生成登录注册的验证码并存储到Cookie
-            Cookie cookie = new Cookie("check_code_key", code);
-            cookie.setPath("/"); // 设置Cookie适用的路径
-            cookie.setHttpOnly(true); // 增加安全性，防止JS直接访问
-            cookie.setMaxAge(5 * 60); // 设置Cookie的存活时间，例如5分钟
-            response.addCookie(cookie);
+            CookieTools.addCookie(response,"check_code_key",code,"/",true,5);
         } else {
             //type为1时，生成邮箱验证码
-            Cookie cookie = new Cookie("check_code_key_email", code);
-            cookie.setPath("/"); // 设置Cookie适用的路径
-            cookie.setHttpOnly(true); // 增加安全性，防止JS直接访问
-            cookie.setMaxAge(5 * 60); // 设置Cookie的存活时间，例如5分钟
-            response.addCookie(cookie);
+            CookieTools.addCookie(response,"check_code_key_email",code,"/",true,5);
         }
         vCode.write(response.getOutputStream());
     }
@@ -54,27 +60,14 @@ public class AccountController {
     public ResponseVO sendEmailCode(HttpServletRequest request, HttpServletResponse response,
                                     String email, String checkCode, Integer type){
         // 从请求中获取Cookie中的验证码
-        String codeFromCookie = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("check_code_key_email".equals(cookie.getName())) {
-                    codeFromCookie = cookie.getValue();
-                    //获取后立即过期
-                    cookie.setPath("/");
-                    cookie.setMaxAge(0);
-                    response.addCookie(cookie);
-                    break;
-                }
-            }
-        }
+        String code = CookieTools.getCookieValue(request,response,"check_code_key_email",true);
         //cookie超时失效
-        if(codeFromCookie==null){
-            throw new BusinessException("验证码已超时，请刷新");
+        if(code==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_801);
         }
         //校验验证码
-        if(!checkCode.equalsIgnoreCase(codeFromCookie)){//忽略大小写
-            throw new BusinessException("图片验证码不正确");
+        if(!checkCode.equalsIgnoreCase(code)){//忽略大小写
+            throw new BusinessException(ResponseCodeEnum.CODE_802);
         }
         //发送邮箱验证码
         accountService.sendEmailCode(email,type);
@@ -86,31 +79,17 @@ public class AccountController {
     public ResponseVO register(HttpServletRequest request, HttpServletResponse response,
                                String email,String nickName,String password,String checkCode,String emailCode){
         // 从请求中获取Cookie中的验证码
-        String codeFromCookie = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("check_code_key".equals(cookie.getName())) {
-                    codeFromCookie = cookie.getValue();
-                    //获取后立即过期
-                    cookie.setPath("/");
-                    cookie.setMaxAge(0);
-                    response.addCookie(cookie);
-                    break;
-                }
-            }
-        }
+        String code = CookieTools.getCookieValue(request,response,"check_code_key",true);
         //cookie超时失效
-        if(codeFromCookie==null){
-            throw new BusinessException("验证码已超时，请刷新");
+        if(code==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_801);
         }
         //校验验证码
-        if(!checkCode.equalsIgnoreCase(codeFromCookie)){//忽略大小写
-            throw new BusinessException("图片验证码不正确");
+        if(!checkCode.equalsIgnoreCase(code)){//忽略大小写
+            throw new BusinessException(ResponseCodeEnum.CODE_802);
         }
         accountService.checkEmailCode(email,emailCode);
         accountService.register(email,nickName,password);
-
         return ResponseVO.getSuccessResponseVO(null);
     }
 
@@ -119,34 +98,129 @@ public class AccountController {
     public ResponseVO login(HttpServletRequest request, HttpServletResponse response,
                                String email,String password,String checkCode){
         // 从请求中获取Cookie中的验证码
-        String codeFromCookie = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("check_code_key".equals(cookie.getName())) {
-                    codeFromCookie = cookie.getValue();
-                    //获取后立即过期
-                    cookie.setPath("/");
-                    cookie.setMaxAge(0);
-                    response.addCookie(cookie);
-                    break;
-                }
-            }
-        }
+        String code = CookieTools.getCookieValue(request,response,"check_code_key",true);
         //cookie超时失效
-        if(codeFromCookie==null){
-            throw new BusinessException("验证码已超时，请刷新");
+        if(code==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_801);
         }
         //校验验证码
-        if(!checkCode.equalsIgnoreCase(codeFromCookie)){//忽略大小写
-            throw new BusinessException("图片验证码不正确");
+        if(!checkCode.equalsIgnoreCase(code)){//忽略大小写
+            throw new BusinessException(ResponseCodeEnum.CODE_802);
         }
         //登录
         UserLoginVo userLoginVo = accountService.login(email,password);
         //添加到cookie并返回
-        response.addCookie(new Cookie("nickName", userLoginVo.getNickName()));
-        response.addCookie(new Cookie("userId", userLoginVo.getUserId()));
-        return ResponseVO.getSuccessResponseVO(userLoginVo);
+        CookieTools.addCookie(response,"nickName",userLoginVo.getNickName(),"/",true,-1);
+        CookieTools.addCookie(response,"userId",userLoginVo.getUserId(),"/",true,-1);
+        CookieTools.addCookie(response,"useSpace",userLoginVo.getUseSpace(),"/",true,-1);
+        CookieTools.addCookie(response,"totalSpace",userLoginVo.getTotalSpace(),"/",true,-1);
+        return ResponseVO.getSuccessResponseVO(userLoginVo);//TODO userLoginVo中返回的信息没有全部加到cookie中
     }
+
+    //重置密码
+    @RequestMapping(value = "/netdisk/api ",method = RequestMethod.POST)
+    public ResponseVO resetPwd(HttpServletRequest request, HttpServletResponse response,
+                               String email,String password,String checkCode,String emailCode){
+        // 从请求中获取Cookie中的验证码
+        String code = CookieTools.getCookieValue(request,response,"check_code_key",true);
+        //cookie超时失效
+        if(code==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_801);
+        }
+        //校验验证码
+        if(!checkCode.equalsIgnoreCase(code)){//忽略大小写
+            throw new BusinessException(ResponseCodeEnum.CODE_802);
+        }
+        accountService.checkEmailCode(email,emailCode);
+        accountService.resetPwd(email,password);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    @Value("${my.outFileFolder}")
+    private String outFileFolder;
+
+    //获取用户头像
+    @RequestMapping(value = "getAvatar/{userId}",method = RequestMethod.GET)
+    public void getAvatar(HttpServletResponse response,@PathVariable String userId){
+        String avatarFolder=outFileFolder+"/avatar/";//头像文件存储目录
+        File folder=new File(avatarFolder);
+        if(!folder.exists()){
+            // 使用mkdirs而不是mkdir以确保创建所有不存在的父目录
+            folder.mkdirs();
+        }
+        String avatarFile=avatarFolder+userId+".jpg";
+        if(!new File(avatarFile).exists()){
+            //头像不存在则使用默认头像
+            avatarFile=avatarFolder+"default.jpg";//TODO 需要将默认头像放置在这个目录下
+        }
+        response.setContentType("image/jpg");
+        FileTools.readFile(response,avatarFile);//读取文件流并写入response
+    }
+
+    //从cookie中获取网盘总空间和使用空间
+    @RequestMapping("getUseSpace")
+    public ResponseVO getUseSpace(HttpServletRequest request){
+        Map res=new HashMap();
+        String totalSpace = CookieTools.getCookieValue(request, null, "totalSpace", false);
+        String useSpace = CookieTools.getCookieValue(request, null, "useSpace", false);
+        res.put("totalSpace",totalSpace);
+        res.put("useSpace",useSpace);
+        return ResponseVO.getSuccessResponseVO(res);
+    }
+
+    //退出登录，清空cookie
+    @RequestMapping("logout")
+    public ResponseVO logout(HttpServletRequest request,HttpServletResponse response) {
+        CookieTools.clearCookie(request,response);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    @RequestMapping(value = "updateUserAvatar",method = RequestMethod.POST)
+    public ResponseVO updateUserAvatar(HttpServletRequest request, MultipartFile avatar) {
+        String avatarFolder=outFileFolder+"/avatar/";//头像文件存储目录
+        File folder=new File(avatarFolder);
+        if(!folder.exists()){
+            // 使用mkdirs而不是mkdir以确保创建所有不存在的父目录
+            folder.mkdirs();
+        }
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        //没获取到userId
+        if (userId==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_803);
+        }
+        File avatarFile = new File(avatarFolder + userId + ".jpg");
+        try {
+            if(avatarFile.exists()){//存在则先删除
+                avatarFile.delete();
+            }
+            avatar.transferTo(avatarFile);//存储头像
+        } catch (Exception e) {
+            throw new BusinessException(ResponseCodeEnum.CODE_811);
+        }
+        //上传头像后覆盖qq头像
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(userId);
+        userInfo.setQqAvatar("");
+        userInfoMapper.updateUserInfo(userInfo);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    //更新密码 TODO 这个接口感觉很危险，可以直接修改密码
+    @RequestMapping(value = "updatePassword",method = RequestMethod.POST)
+    public ResponseVO updatePassword(HttpServletRequest request,String password) {
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        //没获取到userId
+        if (userId==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_803);
+        }
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(userId);
+        userInfo.setPassword(StringTools.encodeByMD5(password));
+        userInfoMapper.updateUserInfo(userInfo);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+
+
 
 }
