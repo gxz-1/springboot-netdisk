@@ -2,11 +2,15 @@ package com.netdisk.advice;
 
 import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.enums.VerifyRegexEnum;
+import com.netdisk.utils.CookieTools;
+import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.servlet.mvc.condition.RequestConditionHolder;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -46,6 +50,13 @@ public class ValidationAspect {
         } catch (Exception e) {//其他错误抛出服务器异常
             throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
+    }
+
+    //TODO 校验登录 待实现
+    private void checkLogin(){
+        //拿到request对象
+//        HttpServletRequest request= (HttpServletRequest) RequestContextHolder.getRequestAttributes();
+//        CookieTools.getCookieValue(request,)
     }
 
     //正则匹配校验,在VerifyRegexEnum中定义了正则校验的规则
