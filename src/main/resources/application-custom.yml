@@ -1,9 +1,3 @@
-log:
-  #日志级别配置(info或debug)
-  level: info
-  #日志目录
-  path: logs
-
 my:
   #外部文件存储目录(下面有logs存储日志,avatar存储头像)
   outFileFolder: E:/CodeWorkspace/netdiskfile
@@ -11,6 +5,11 @@ my:
   invalidEmailTime: 5
   #用户的网盘空间,单位:MB
   TotalSpace: 500
+  log:
+    #日志级别配置(info或debug)
+    level: info
+    #日志目录名称
+    path: logs
 
 #  #超级管理员id
 #admin.emails=test@qq.com

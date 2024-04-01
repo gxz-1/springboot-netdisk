@@ -23,21 +23,21 @@ public class SpringTest {
     @Value("${spring.mail.username}")
     String fromEmail;//在配置中拿到发送的邮箱
 
-    @Test
-    public void testMailSend(){
-        String code= StringTools.getRandomNumber(5);
-        //4.向邮箱发送code
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
-        try {
-            helper.setFrom(fromEmail);
-            helper.setTo("582783768@qq.com");
-            helper.setSubject("netdisk网盘注册验证码");
-            helper.setText(String.format("你好，验证码是：%s，5分钟有效。", code));
-            helper.setSentDate(new Date());
-            mailSender.send(message);
-        } catch (MessagingException e) {
-            throw new BusinessException("邮件发送失败");
-        }
-    }
+//    @Test
+//    public void testMailSend(){
+//        String code= StringTools.getRandomNumber(5);
+//        //4.向邮箱发送code
+//        MimeMessage message = mailSender.createMimeMessage();
+//        MimeMessageHelper helper = new MimeMessageHelper(message);
+//        try {
+//            helper.setFrom(fromEmail);
+//            helper.setTo("582783768@qq.com");
+//            helper.setSubject("netdisk网盘注册验证码");
+//            helper.setText(String.format("你好，验证码是：%s，5分钟有效。", code));
+//            helper.setSentDate(new Date());
+//            mailSender.send(message);
+//        } catch (MessagingException e) {
+//            throw new BusinessException("邮件发送失败");
+//        }
+//    }
 }

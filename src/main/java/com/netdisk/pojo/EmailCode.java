@@ -4,12 +4,11 @@ package com.netdisk.pojo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
-import java.io.Serializable;
 import java.util.Date;
 
 
 @Data
-public class EmailCode implements Serializable {
+public class EmailCode{
 
 
     private String email;
