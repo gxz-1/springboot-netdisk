@@ -37,6 +37,5 @@ build/
 ### Mac OS ###
 .DS_Store
 
-#忽略日志和springboot的yml配置文件
-logs/
-*.yml
+#springboot的mail.yml配置文件
+application-mail.yml
