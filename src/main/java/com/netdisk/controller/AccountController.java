@@ -112,8 +112,6 @@ public class AccountController {
         //添加到cookie并返回
         CookieTools.addCookie(response,"nickName",userLoginVo.getNickName(),"/",true,-1);
         CookieTools.addCookie(response,"userId",userLoginVo.getUserId(),"/",true,-1);
-        CookieTools.addCookie(response,"useSpace",userLoginVo.getUseSpace(),"/",true,-1);
-        CookieTools.addCookie(response,"totalSpace",userLoginVo.getTotalSpace(),"/",true,-1);
         return ResponseVO.getSuccessResponseVO(userLoginVo);//TODO userLoginVo中返回的信息没有全部加到cookie中
     }
 
@@ -197,11 +195,11 @@ public class AccountController {
         } catch (Exception e) {
             throw new BusinessException(ResponseCodeEnum.CODE_811);
         }
-        //上传头像后覆盖qq头像
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUserId(userId);
-        userInfo.setQqAvatar("");
-        userInfoMapper.updateUserInfo(userInfo);
+        //TODO 上传头像后覆盖qq头像  暂时没用到
+//        UserInfo userInfo = new UserInfo();
+//        userInfo.setUserId(userId);
+//        userInfo.setQqAvatar("");
+//        userInfoMapper.updateUserInfo(userInfo);
         return ResponseVO.getSuccessResponseVO(null);
     }
 

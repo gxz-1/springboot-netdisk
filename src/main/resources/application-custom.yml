@@ -1,6 +1,6 @@
 my:
   #外部文件存储目录(下面有logs存储日志,avatar存储头像)
-  outFileFolder: E:/CodeWorkspace/netdiskfile
+  outFileFolder: D:/netdiskfile
   #邮箱验证码的过期时间,单位：分钟
   invalidEmailTime: 5
   #用户的网盘空间,单位:MB

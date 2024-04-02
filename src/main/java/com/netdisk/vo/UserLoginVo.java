@@ -10,15 +10,15 @@ public class UserLoginVo {
     private String userId;
     private Long avatar;
     private boolean admin;
-    private String useSpace;
-    private String totalSpace;
+    private Long useSpace;
+    private Long totalSpace;
 
     public UserLoginVo(UserInfo userInfo){
         this.nickName=userInfo.getNickName();
         this.userId=userInfo.getUserId();
         this.admin=false;//TODO: 暂时不处理管理员相关逻辑
         this.avatar=null;//TODO: 后续设置
-        this.useSpace= String.valueOf(userInfo.getUseSpace());
-        this.totalSpace= String.valueOf(userInfo.getTotalSpace());
+        this.useSpace= userInfo.getUseSpace();
+        this.totalSpace= userInfo.getTotalSpace();
     }
 }

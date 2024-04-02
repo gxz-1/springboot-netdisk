@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -21,7 +22,8 @@ public class FileInfoController {
 
     @RequestMapping("loadDataList")
     public ResponseVO loadDataList(HttpServletRequest request, HttpServletResponse response,
-                                  Integer pageNo,Integer pageSize,String category){
+                                   @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
+                                   String category){
         String userId = CookieTools.getCookieValue(request, response, "userId", false);
         PageInfo<FileInfoVo> pageInfo = fileInfoService.selectPageFileInfo(pageNo,pageSize,category, userId);
         return ResponseVO.getSuccessResponseVO(pageInfo);

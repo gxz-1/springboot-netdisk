@@ -20,7 +20,8 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Override
     public PageInfo<FileInfoVo> selectPageFileInfo(Integer pageNo, Integer pageSize, String category, String userId) {
         PageHelper.startPage(pageNo, pageSize);
-        Integer categoryNum = FileCategoryEnums.getByCode(category).getCategory();
+        FileCategoryEnums code = FileCategoryEnums.getByCode(category);
+        Integer categoryNum = (code==null) ? null:code.getCategory();
         List<FileInfoVo> fileInfoVolist = fileInfoMapper.selectByUserIdAndCategory(categoryNum, userId);
         return new PageInfo<>(fileInfoVolist);
     }

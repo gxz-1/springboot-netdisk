@@ -1,7 +1,7 @@
 #数据库配置
 spring:
   datasource:
-    url: jdbc:mysql://202.115.16.76:9875/netdisk
+    url: jdbc:mysql://202.115.17.228:9875/netdisk
     username: netdisk_user
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
