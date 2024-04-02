@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.netdisk.mappers.FileInfoMapper">
+
+    <select id="selectByUserIdAndCategory" resultType="com.netdisk.vo.FileInfoVo">
+        SELECT
+        file_id, file_pid, file_size, file_name, file_cover, create_time, last_update_time,
+        floder_type, file_category, file_type, status
+        FROM file_info
+        WHERE user_id = #{userId}
+        and del_flag = 2
+        <if test="category != null"> and file_category = #{category}</if>
+        ORDER BY last_update_time desc
+    </select>
+</mapper>

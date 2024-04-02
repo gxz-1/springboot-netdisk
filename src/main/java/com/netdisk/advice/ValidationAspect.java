@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 @Aspect//设置为切面
 public class ValidationAspect {
 
-    @Before("execution(* com.netdisk.controller.*.*(..))")//对controller包中的所有参数
+    @Before("execution(* com.netdisk.controller.AccountController.*(..))")//对controller包中AccountController类的所有参数
     private void ValidateParam(JoinPoint point){
         MethodSignature methodSignature = (MethodSignature) point.getSignature();// 获取方法签名
         String methodName = methodSignature.getName();// 获取被拦截的方法名
