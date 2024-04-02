@@ -7,7 +7,7 @@ my:
   TotalSpace: 500
   log:
     #日志级别配置(info或debug)
-    level: debug
+    level: info
     #日志目录名称
     path: logs
 

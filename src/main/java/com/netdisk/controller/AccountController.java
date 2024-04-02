@@ -112,7 +112,7 @@ public class AccountController {
         //添加到cookie并返回
         CookieTools.addCookie(response,"nickName",userLoginVo.getNickName(),"/",true,-1);
         CookieTools.addCookie(response,"userId",userLoginVo.getUserId(),"/",true,-1);
-        return ResponseVO.getSuccessResponseVO(userLoginVo);//TODO userLoginVo中返回的信息没有全部加到cookie中
+        return ResponseVO.getSuccessResponseVO(userLoginVo);
     }
 
     //重置密码
@@ -203,8 +203,8 @@ public class AccountController {
         return ResponseVO.getSuccessResponseVO(null);
     }
 
-    //更新密码 TODO 这个接口感觉很危险，可以直接修改密码
-    @RequestMapping(value = "updatePassword",method = RequestMethod.POST)
+    //更新密码 TODO 这个接口感觉很危险，可以直接修改密码,暂时不开启
+//    @RequestMapping(value = "updatePassword",method = RequestMethod.POST)
     public ResponseVO updatePassword(HttpServletRequest request,String password) {
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
         //没获取到userId

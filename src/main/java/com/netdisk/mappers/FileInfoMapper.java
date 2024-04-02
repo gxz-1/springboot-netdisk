@@ -6,5 +6,7 @@ import java.util.List;
 
 public interface FileInfoMapper {
     List<FileInfoVo> selectByUserIdAndCategory(Integer category, String userId);
+
+    Long selectUseSpace(String userId);
 }
 

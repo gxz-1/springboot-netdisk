@@ -6,13 +6,18 @@
 <mapper namespace="com.netdisk.mappers.FileInfoMapper">
 
     <select id="selectByUserIdAndCategory" resultType="com.netdisk.vo.FileInfoVo">
-        SELECT
+        select
         file_id, file_pid, file_size, file_name, file_cover, create_time, last_update_time,
         floder_type, file_category, file_type, status
-        FROM file_info
-        WHERE user_id = #{userId}
+        from file_info
+        where user_id = #{userId}
         and del_flag = 2
         <if test="category != null"> and file_category = #{category}</if>
-        ORDER BY last_update_time desc
+        order by last_update_time desc
+    </select>
+
+    <select id="selectUseSpace" resultType="java.lang.Long">
+        select ifnull(sum(file_size),0) from file_info
+        where user_id = #{userId}
     </select>
 </mapper>

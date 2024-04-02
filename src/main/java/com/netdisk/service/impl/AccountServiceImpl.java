@@ -3,6 +3,7 @@ package com.netdisk.service.impl;
 import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.advice.BusinessException;
 import com.netdisk.mappers.EmailCodeMapper;
+import com.netdisk.mappers.FileInfoMapper;
 import com.netdisk.mappers.UserInfoMapper;
 import com.netdisk.pojo.EmailCode;
 import com.netdisk.pojo.UserInfo;
@@ -28,19 +29,17 @@ public class AccountServiceImpl implements AccountService {
 
     @Autowired
     private EmailCodeMapper emailCodeMapper;
-
     @Autowired
     private UserInfoMapper userInfoMapper;
-
+    @Autowired
+    private FileInfoMapper fileInfoMapper;
     @Autowired
     private JavaMailSender mailSender;//spring提供的邮箱操作对象
 
     @Value("${my.invalidEmailTime}")
     private Integer invalidEmailTime;//邮箱验证码的过期时间,单位:分钟
-
     @Value("${my.TotalSpace}")
     private Long TotalSpace;//用户的网盘空间,单位:MB
-
     @Value("${spring.mail.username}")
     private String fromEmail;//在配置中拿到发送的邮箱
 
@@ -57,7 +56,7 @@ public class AccountServiceImpl implements AccountService {
         //1.生成长度为5的随机数
         String code= StringTools.getRandomNumber(5);
         //2.每次发送前需要重置之前存储的验证码
-        emailCodeMapper.disableEmailCode(email);
+        emailCodeMapper.disableEmailCode(email);//TODO 这里是逻辑删除，后续考虑定期清理数据库
         //3.存储验证码到EmailCode表中
         EmailCode emailCode=new EmailCode();
         emailCode.setEmail(email);
@@ -127,10 +126,11 @@ public class AccountServiceImpl implements AccountService {
         }
         //更新登录时间
         userInfo.setLastLoginTime(new Date());
+        //更新用户空间
+        userInfo.setUseSpace(fileInfoMapper.selectUseSpace(userInfo.getUserId()));
         userInfoMapper.updateUserInfo(userInfo);
         //设置返回vo
-        UserLoginVo userLoginVo = new UserLoginVo(userInfo);
-        return userLoginVo;
+        return new UserLoginVo(userInfo);
     }
 
     //修改密码
