@@ -14,7 +14,16 @@ public class StringTools {
         return DigestUtils.md5Hex(str);
     }
 
+    //当str为null或空字符或"null"以及"\u0000"(unicode编码中的空字符)判空
+    public static boolean isEmpty(String str) {
 
+        if (null == str || "".equals(str) || "null".equals(str) || "\u0000".equals(str)) {
+            return true;
+        } else if ("".equals(str.trim())) {
+            return true;
+        }
+        return false;
+    }
 
 
 

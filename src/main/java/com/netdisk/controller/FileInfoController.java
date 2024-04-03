@@ -25,21 +25,21 @@ public class FileInfoController {
     FileInfoService fileInfoService;
 
     @RequestMapping(value = "loadDataList",method = RequestMethod.POST)
-    public ResponseVO loadDataList(HttpServletRequest request, HttpServletResponse response,
+    public ResponseVO loadDataList(HttpServletRequest request,
                                    @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
                                    String category){
-        String userId = CookieTools.getCookieValue(request, response, "userId", false);
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
         PageInfo<FileInfoVo> pageInfo = fileInfoService.selectPageFileInfo(pageNo,pageSize,category, userId);
         return ResponseVO.getSuccessResponseVO(pageInfo);
     }
 
     @RequestMapping
     //前端进行了Md5校验和文件分片，传给后端MD5值fileMd5，以及分片索引chunkIndex，分片总数chunks
-    public ResponseVO uploadFile(HttpServletRequest request, HttpServletResponse response,
+    public ResponseVO uploadFile(HttpServletRequest request,HttpServletResponse response,
                                  String fileId, MultipartFile file,String fileName,String filePid,
                                  String fileMd5,Integer chunkIndex,Integer chunks){
-        String userId = CookieTools.getCookieValue(request, response, "userId", false);
-        Map result = fileInfoService.uploadFile(userId,fileId,file,fileName,filePid,fileMd5,chunkIndex,chunks);
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        Map result = fileInfoService.uploadFile(request,response,userId,fileId,file,fileName,filePid,fileMd5,chunkIndex,chunks);
         return ResponseVO.getSuccessResponseVO(result);
     }
 }

@@ -112,6 +112,8 @@ public class AccountController {
         //添加到cookie并返回
         CookieTools.addCookie(response,"nickName",userLoginVo.getNickName(),"/",true,-1);
         CookieTools.addCookie(response,"userId",userLoginVo.getUserId(),"/",true,-1);
+        CookieTools.addCookie(response,"totalSpace", String.valueOf(userLoginVo.getTotalSpace()),"/",true,-1);
+        CookieTools.addCookie(response,"useSpace", String.valueOf(userLoginVo.getUseSpace()),"/",true,-1);
         return ResponseVO.getSuccessResponseVO(userLoginVo);
     }
 
