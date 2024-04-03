@@ -12,6 +12,6 @@ public interface FileInfoService {
     PageInfo<FileInfoVo> selectPageFileInfo(Integer pageNo, Integer pageSize, String category, String userId);
 
     Map uploadFile(HttpServletRequest request, HttpServletResponse response,
-                          String userId, String fileId, MultipartFile file, String fileName, String filePid,
+                          String fileId, MultipartFile file, String fileName, String filePid,
                           String fileMd5, Integer chunkIndex, Integer chunks);
 }

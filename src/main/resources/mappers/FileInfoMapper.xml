@@ -46,7 +46,7 @@
         where file_md5 = #{fileMd5} and status=2 limit 1
     </select>
 
-    <select id="selectOneByUserIdAndfilePidAndfileName" resultType="com.netdisk.pojo.FileInfo">
+    <select id="selectSameNameFile" resultType="com.netdisk.pojo.FileInfo">
         select * from file_info
         where user_id = #{userId} and file_pid = #{filePid} and file_name = #{fileName}
     </select>

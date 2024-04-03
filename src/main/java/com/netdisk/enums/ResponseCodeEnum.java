@@ -23,7 +23,7 @@ public enum ResponseCodeEnum {
     CODE_808(808,"昵称已经存在"),
     CODE_809(809,"用户名或密码错误"),
     CODE_810(810,"账号已停用"),
-    CODE_811(811,"上传头像失败");
+    CODE_811(811,"上传文件失败");
     private Integer code;
     private String msg;
 

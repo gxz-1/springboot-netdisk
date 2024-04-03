@@ -9,6 +9,11 @@ public class StringTools {
         //使用commons包生成长度为len的只包含数字的随机数
         return RandomStringUtils.random(len, false, true);
     }
+
+    public static String getRandomString(Integer len) {
+        //使用commons包生成长度为len的包含数字和数字的随机数
+        return RandomStringUtils.random(len, true, true);
+    }
     
     public static String encodeByMD5(String str){
         return DigestUtils.md5Hex(str);

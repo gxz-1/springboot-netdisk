@@ -33,13 +33,13 @@ public class FileInfoController {
         return ResponseVO.getSuccessResponseVO(pageInfo);
     }
 
-    @RequestMapping
+    @RequestMapping(value = "uploadFile",method = RequestMethod.POST)
     //前端进行了Md5校验和文件分片，传给后端MD5值fileMd5，以及分片索引chunkIndex，分片总数chunks
     public ResponseVO uploadFile(HttpServletRequest request,HttpServletResponse response,
                                  String fileId, MultipartFile file,String fileName,String filePid,
                                  String fileMd5,Integer chunkIndex,Integer chunks){
-        String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        Map result = fileInfoService.uploadFile(request,response,userId,fileId,file,fileName,filePid,fileMd5,chunkIndex,chunks);
+
+        Map result = fileInfoService.uploadFile(request,response,fileId,file,fileName,filePid,fileMd5,chunkIndex,chunks);
         return ResponseVO.getSuccessResponseVO(result);
     }
 }

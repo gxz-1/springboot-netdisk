@@ -12,7 +12,7 @@ public interface FileInfoMapper {
 
     FileInfo selectOneByMD5(String fileMd5);
 
-    FileInfo selectOneByUserIdAndfilePidAndfileName();
+    FileInfo selectSameNameFile(String userId,String filePid,String fileName);
 
     void updateFileInfo(FileInfo dbFile);
 }

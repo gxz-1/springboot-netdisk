@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 15MB # 设置上传文件的最大大小
+      max-request-size: 20MB # 设置请求的最大大小
   profiles:
     active: mail,custom,mysql,mybatis
 
@@ -6,9 +10,7 @@ server:
   port: 8080
   servlet:
     context-path: /netdisk
-    session:
-      #session过期时间 30分钟
-      timeout: 30m
+
 
 #    #处理favicon 这个配置项用于禁用Spring Boot自动处理favicon.ico（网站图标）的功能
 #    spring.mvc.favicon.enable=false

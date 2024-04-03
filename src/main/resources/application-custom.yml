@@ -1,5 +1,5 @@
 my:
-  #外部文件存储目录(下面有logs存储日志,avatar存储头像)
+  #外部文件存储目录(下面有logs存储日志,avatar存储头像,temp文件临时目录)
   outFileFolder: D:/netdiskfile
   #邮箱验证码的过期时间,单位：分钟
   invalidEmailTime: 5
