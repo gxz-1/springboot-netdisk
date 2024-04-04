@@ -17,5 +17,7 @@ public interface FileInfoMapper {
     void updateFileInfo(FileInfo info);
 
     void insertFileInfo(FileInfo info);
+
+    FileInfo selectByUserIdAndFileId(String fileId, String userId);
 }
 

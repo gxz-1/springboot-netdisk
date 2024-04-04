@@ -14,4 +14,7 @@ public interface FileInfoService {
     Map uploadFile(HttpServletRequest request, HttpServletResponse response,
                           String fileId, MultipartFile file, String fileName, String filePid,
                           String fileMd5, Integer chunkIndex, Integer chunks);
+
+    //将分片的文件合并
+    void transferFile(String fileId,String userId);
 }
