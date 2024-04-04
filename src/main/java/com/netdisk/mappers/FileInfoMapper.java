@@ -14,6 +14,8 @@ public interface FileInfoMapper {
 
     FileInfo selectSameNameFile(String userId,String filePid,String fileName);
 
-    void updateFileInfo(FileInfo dbFile);
+    void updateFileInfo(FileInfo info);
+
+    void insertFileInfo(FileInfo info);
 }
 

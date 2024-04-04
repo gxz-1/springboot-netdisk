@@ -14,6 +14,15 @@ public class StringTools {
         //使用commons包生成长度为len的包含数字和数字的随机数
         return RandomStringUtils.random(len, true, true);
     }
+
+    public static String getFileSuffix(String fileName) {
+        Integer index = fileName.lastIndexOf(".");
+        if (index == -1) {
+            return "";
+        }
+        String suffix = fileName.substring(index);
+        return suffix;
+    }
     
     public static String encodeByMD5(String str){
         return DigestUtils.md5Hex(str);

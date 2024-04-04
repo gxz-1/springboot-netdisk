@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.netdisk.advice.BusinessException;
 import com.netdisk.enums.FileCategoryEnums;
+import com.netdisk.enums.FileTypeEnums;
 import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.enums.UploadStatusEnums;
 import com.netdisk.mappers.FileInfoMapper;
@@ -14,7 +15,6 @@ import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
-import com.netdisk.vo.ResponseVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,10 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Autowired
     FileInfoMapper fileInfoMapper;
+    @Autowired
     UserInfoMapper userInfoMapper;
+    @Autowired
+    FileInfoService fileInfoService;
 
     @Value("${my.outFileFolder}")
     String outFileFolder;
@@ -74,12 +77,6 @@ public class FileInfoServiceImpl implements FileInfoService {
                 if (dbFile.getFileSize() + useSpace > totalSpace) {
                     throw new BusinessException(ResponseCodeEnum.CODE_904);
                 }
-                //更新存储空间
-                UserInfo info = new UserInfo();
-                info.setUserId(userId);
-                info.setUseSpace(dbFile.getFileSize() + useSpace);
-                userInfoMapper.updateUserInfo(info);
-                CookieTools.addCookie(response, "useSpace", String.valueOf(info.getUseSpace()), "/", true, -1);
                 //秒传
                 dbFile.setUserId(userId);
                 dbFile.setFileId(fileId);
@@ -89,6 +86,12 @@ public class FileInfoServiceImpl implements FileInfoService {
                 dbFile.setCreateTime(new Date());
                 dbFile.setLastUpdateTime(new Date());
                 fileInfoMapper.insertFileInfo(dbFile);
+                //更新存储空间
+                UserInfo info = new UserInfo();
+                info.setUserId(userId);
+                info.setUseSpace(dbFile.getFileSize() + useSpace);
+                userInfoMapper.updateUserInfo(info);
+                CookieTools.addCookie(response, "useSpace", String.valueOf(info.getUseSpace()), "/", true, -1);
                 //处理返回结果
                 Map result=new HashMap();
                 result.put("fileId",fileId);
@@ -97,33 +100,62 @@ public class FileInfoServiceImpl implements FileInfoService {
             }
         }
         //2.分片上传
-        if(chunkIndex<chunks-1){//不是最后一片
-            //当前分片长度是否超过总容量
-            if(file.getSize()+useSpace>totalSpace){
-                throw new BusinessException(ResponseCodeEnum.CODE_904);
-            }
-            CookieTools.addCookie(response,"useSpace", String.valueOf(file.getSize()+useSpace),"/",true,-1);
-            //暂存临时目录
-            String tempFolderName=outFileFolder+"/temp/"+userId+fileId;
-            File tempFileFolder = new File(tempFolderName);
-            if(!tempFileFolder.exists()){
-                tempFileFolder.mkdirs();
-            }
-            File tempFile = new File(tempFolderName + "/" + chunkIndex);
-            try {
-                file.transferTo(tempFile);
-            } catch (IOException e) {
-                throw new BusinessException(ResponseCodeEnum.CODE_811);
-            }
+        //当前分片长度是否超过总容量
+        if(file.getSize()+useSpace>totalSpace){
+            throw new BusinessException(ResponseCodeEnum.CODE_904);
+        }
+        CookieTools.addCookie(response,"useSpace", String.valueOf(file.getSize()+useSpace),"/",true,-1);
+        //暂存临时目录
+        String tempFolderName=outFileFolder+"/temp/"+userId+fileId;
+        File tempFileFolder = new File(tempFolderName);
+        if(!tempFileFolder.exists()){
+            tempFileFolder.mkdirs();
+        }
+        File tempFile = new File(tempFolderName + "/" + chunkIndex);
+        try {
+            file.transferTo(tempFile);
+        } catch (IOException e) {
+            throw new BusinessException(ResponseCodeEnum.CODE_811);
+        }
+        if(chunkIndex+1<chunks){//不是最后一片
             //处理返回结果
             Map result=new HashMap();
             result.put("fileId",fileId);
             result.put("status",UploadStatusEnums.UPLOADING.getCode());
             return result;
-        } else {//合并分片
-
+        }else {
+            //3.文件合并
+            //根据文件后缀获取文件类型
+            String fileSuffix=StringTools.getFileSuffix(fileName);
+            FileTypeEnums typeEnums = FileTypeEnums.getFileTypeBySuffix(fileSuffix);
+            //新增文件信息
+            FileInfo info = new FileInfo();
+            info.setFileId(fileId);
+            info.setUserId(userId);
+            info.setFileName(fileName);
+            info.setFileMd5(fileMd5);
+//            info.setFilePath();
+//            info.setFileSize();
+//            info.setFileCover();
+            info.setFilePid(filePid);
+            info.setCreateTime(new Date());
+            info.setLastUpdateTime(new Date());
+            info.setFileCategory(typeEnums.getCategory().getCategory());
+            info.setFileType(typeEnums.getType());
+            info.setStatus(0);//转码中
+            info.setFolderType(0);//0文件 1目录
+            fileInfoMapper.insertFileInfo(info);
+            //更新存储空间
+            UserInfo userInfo = new UserInfo();
+            userInfo.setUserId(userId);
+            userInfo.setUseSpace(file.getSize() + useSpace);
+            userInfoMapper.updateUserInfo(userInfo);
+            //处理返回结果
+            Map result=new HashMap();
+            result.put("fileId",fileId);
+            result.put("status",UploadStatusEnums.UPLOAD_FINISH.getCode());
+            return result;
         }
-        return null;
     }
 
 }
