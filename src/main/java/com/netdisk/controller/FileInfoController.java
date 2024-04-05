@@ -4,18 +4,20 @@ import com.github.pagehelper.PageInfo;
 import com.netdisk.enums.FileCategoryEnums;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.CookieTools;
+import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
 import com.netdisk.vo.ResponseVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.netdisk.utils.FileTools;
 
 import java.util.Map;
+
 
 @RestController
 @RequestMapping("api/file")
@@ -41,5 +43,21 @@ public class FileInfoController {
 
         Map result = fileInfoService.uploadFile(request,response,fileId,file,fileName,filePid,fileMd5,chunkIndex,chunks);
         return ResponseVO.getSuccessResponseVO(result);
+    }
+
+    @Value("${my.outFileFolder}")
+    String outFileFolder;
+
+    @RequestMapping("getImage/{coverName}")//匹配任何字符直到URL的结束（由于路径本身包含斜杠/）
+    public void getImage(HttpServletResponse response,
+            @PathVariable String coverName){
+        if (StringTools.isEmpty(coverName) || StringUtils.isBlank(coverName)) {
+            return ;
+        }
+        String suffix = StringTools.getFileSuffix(coverName);
+        String contentType = "image/" + suffix.replace(".", "");//"image/jpg"
+        response.setContentType(contentType);
+        response.setHeader("Cache-Control", "max-age=2592000");
+        FileTools.readFile(response, outFileFolder+"/file/"+coverName);
     }
 }

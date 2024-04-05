@@ -144,7 +144,7 @@ public class FileInfoServiceImpl implements FileInfoService {
             info.setUserId(userId);
             info.setFileName(fileName);
             info.setFileMd5(fileMd5);
-            info.setFilePath(outFileFolder+"/file/"+userId+fileId+"."+fileSuffix);//定义服务器文件存储路径
+            info.setFilePath(outFileFolder+"/file/"+userId+fileId+fileSuffix);//定义服务器文件存储路径
             info.setFilePid(filePid);
             info.setCreateTime(new Date());
             info.setLastUpdateTime(new Date());
@@ -178,7 +178,7 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Async
     public void transferFile(String fileId,String userId) {
         Boolean isSuccess = true;
-        String coverPath = null;
+        String coverName = null;
         FileTypeEnums typeEnums = null;
         FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId);
         if (fileInfo == null || fileInfo.getStatus() != 0) {
@@ -219,14 +219,15 @@ public class FileInfoServiceImpl implements FileInfoService {
             //视频文件切割
             cutVideo(fileId,fileInfo.getFilePath());
             //生成缩略图
-            coverPath=outFileFolder+"/file/"+userId+fileId+".png";
-            ScaleFilter.createCover4Video(new File(fileInfo.getFilePath()),150,new File(coverPath));
+            coverName=userId+fileId+".png";
+            ScaleFilter.createCover4Video(new File(fileInfo.getFilePath()),150,new File(outFileFolder+"/file/"+coverName));
         }else if(typeEnums == FileTypeEnums.IMAGE){//图片
-            coverPath=outFileFolder+"/file/"+userId+fileId+"_.png";//多加一个_区分缩略图和原图
-            Boolean ok = ScaleFilter.createThumbnailWidthFFmpeg(new File(fileInfo.getFilePath()), 150, new File(coverPath), false);
+            coverName=userId+fileId+"_.png";//多加一个_区分缩略图和原图
+            Boolean ok = ScaleFilter.createThumbnailWidthFFmpeg(new File(fileInfo.getFilePath()), 150,
+                    new File(outFileFolder+"/file/"+coverName), false);
             if(!ok){//压缩失败，例如原图太小
                 try {
-                    FileUtils.copyFile(new File(fileInfo.getFilePath()),new File(coverPath));
+                    FileUtils.copyFile(new File(fileInfo.getFilePath()),new File(outFileFolder+"/file/"+coverName));
                 } catch (IOException e) {
                     throw new BusinessException("复制图片失败");
                 }
@@ -234,7 +235,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         }
         //设置文件大小
         fileInfo.setFileSize(targetFile.length());
-        fileInfo.setFileCover(coverPath);
+        fileInfo.setFileCover(coverName);
         fileInfo.setStatus(isSuccess?2:1);//2转码成功 1转码失败
         fileInfoMapper.updateFileInfo(fileInfo); //TODO 可能存在写后写问题
     }
