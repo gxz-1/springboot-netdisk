@@ -13,6 +13,8 @@ import com.netdisk.pojo.FileInfo;
 import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.CookieTools;
+import com.netdisk.utils.ProcessUtils;
+import com.netdisk.utils.ScaleFilter;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
 import jakarta.servlet.http.HttpServletRequest;
@@ -176,7 +178,7 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Async
     public void transferFile(String fileId,String userId) {
         Boolean isSuccess = true;
-        String cover = null;
+        String coverPath = null;
         FileTypeEnums typeEnums = null;
         FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId);
         if (fileInfo == null || fileInfo.getStatus() != 0) {
@@ -210,11 +212,51 @@ public class FileInfoServiceImpl implements FileInfoService {
             isSuccess=false;
             throw new BusinessException("合并文件失败");
         }
+        //视频切割，生成缩略图
+        typeEnums=FileTypeEnums.getByType(fileInfo.getFileType());
+
+        if(typeEnums == FileTypeEnums.VIDEO){
+            //视频文件切割
+            cutVideo(fileId,fileInfo.getFilePath());
+            //生成缩略图
+            coverPath=outFileFolder+"/file/"+userId+fileId+".png";
+            ScaleFilter.createCover4Video(new File(fileInfo.getFilePath()),150,new File(coverPath));
+        }else if(typeEnums == FileTypeEnums.IMAGE){//图片
+            coverPath=outFileFolder+"/file/"+userId+fileId+"_.png";//多加一个_区分缩略图和原图
+            Boolean ok = ScaleFilter.createThumbnailWidthFFmpeg(new File(fileInfo.getFilePath()), 150, new File(coverPath), false);
+            if(!ok){//压缩失败，例如原图太小
+                try {
+                    FileUtils.copyFile(new File(fileInfo.getFilePath()),new File(coverPath));
+                } catch (IOException e) {
+                    throw new BusinessException("复制图片失败");
+                }
+            }
+        }
         //设置文件大小
         fileInfo.setFileSize(targetFile.length());
-        fileInfo.setFileCover(null);
+        fileInfo.setFileCover(coverPath);
         fileInfo.setStatus(isSuccess?2:1);//2转码成功 1转码失败
         fileInfoMapper.updateFileInfo(fileInfo); //TODO 可能存在写后写问题
+    }
+
+    private void cutVideo(String fileId,String videoPath){
+        //创建同名切片目录
+        File tsFolder = new File(videoPath.substring(0, videoPath.lastIndexOf(".")));
+        if(!tsFolder.exists()){
+            tsFolder.mkdirs();
+        }
+        //调用ffmpeg的命令
+        final String CMD_TRANSFER_2TS = "ffmpeg -y -i %s  -vcodec copy -acodec copy -vbsf h264_mp4toannexb %s";
+        final String CMD_CUT_TS = "ffmpeg -i %s -c copy -map 0 -f segment -segment_list %s -segment_time 30 %s/%s_%%4d.ts";
+        //生成ts文件
+        String tsPath=tsFolder+"/index.ts";
+        String cmd=String.format(CMD_TRANSFER_2TS,videoPath,tsPath);
+        ProcessUtils.executeCommand(cmd,false);
+        //生成索引文件.m3u8和切片.ts
+        cmd=String.format(CMD_CUT_TS,tsPath,tsFolder.getPath()+"/index.m3u8",tsFolder.getPath(),fileId);
+        ProcessUtils.executeCommand(cmd,false);
+        //删除index.ts
+        new File(tsPath).delete();
     }
 
 }
