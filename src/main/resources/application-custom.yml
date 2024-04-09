@@ -1,14 +1,14 @@
 my:
   #外部文件存储目录(下面有logs存储日志,avatar存储头像,temp文件临时目录,file文件真实目录)
-#  outFileFolder: D:/netdiskfile
-  outFileFolder: /mnt/mydisk/netdiskfile
+  outFileFolder: D:/netdiskfile
+#  outFileFolder: /mnt/mydisk/netdiskfile
   #邮箱验证码的过期时间,单位：分钟
   invalidEmailTime: 5
   #用户的网盘空间,单位:MB
   TotalSpace: 500
   log:
     #日志级别配置(info或debug)
-    level: debug
+    level: info
     #日志目录名称
     path: logs
 

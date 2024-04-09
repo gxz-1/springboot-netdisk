@@ -2,6 +2,7 @@ package com.netdisk.controller;
 
 import com.github.pagehelper.PageInfo;
 import com.netdisk.enums.FileCategoryEnums;
+import com.netdisk.pojo.FileInfo;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.service.impl.FileInfoServiceImpl;
 import com.netdisk.utils.CookieTools;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.netdisk.utils.FileTools;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -31,9 +33,9 @@ public class FileInfoController {
     //获取文件列表
     public ResponseVO loadDataList(HttpServletRequest request,
                                    @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
-                                   String category){
+                                   String category,String filePid){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        PageInfo<FileInfoVo> pageInfo = fileInfoService.selectPageFileInfo(pageNo,pageSize,category, userId);
+        PageInfo<FileInfoVo> pageInfo = fileInfoService.selectPageFileInfo(pageNo,pageSize,category, userId,filePid);
         return ResponseVO.getSuccessResponseVO(pageInfo);
     }
 
@@ -75,10 +77,26 @@ public class FileInfoController {
 
     //读取其他文件
     @RequestMapping("getFile/{fileId}")
-    public ResponseVO getFileInfo(HttpServletRequest request,HttpServletResponse response,
+    public void getFileInfo(HttpServletRequest request,HttpServletResponse response,
                                   @PathVariable String fileId){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
         fileInfoService.getFileInfo(response,fileId,userId);
-        return  ResponseVO.getSuccessResponseVO(null);
+    }
+
+    //新建目录
+    @RequestMapping(value = "newFolder",method = RequestMethod.POST)
+    public ResponseVO createFolder(HttpServletRequest request,
+                                   String filePid,String fileName){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        FileInfo info = fileInfoService.createFolder(filePid,userId,fileName);
+        return ResponseVO.getSuccessResponseVO(info);
+    }
+
+    //获取文件目录，path按层次传入多个目录的fileid
+    @RequestMapping(value = "getFolderInfo",method = RequestMethod.POST)
+    public ResponseVO getFolderInfo(HttpServletRequest request,String path){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        List<FileInfo> res = fileInfoService.getFolderInfo(path,userId);
+        return ResponseVO.getSuccessResponseVO(res);
     }
 }

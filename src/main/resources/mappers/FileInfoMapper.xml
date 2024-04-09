@@ -72,6 +72,7 @@
         folder_type, file_category, file_type, status
         from file_info
         where user_id = #{userId}
+        and file_pid=#{filePid}
         and del_flag = 2
         <if test="category != null"> and file_category = #{category}</if>
         order by last_update_time desc
@@ -89,10 +90,10 @@
 
     <select id="selectSameNameFile" resultType="com.netdisk.pojo.FileInfo">
         select * from file_info
-        where user_id = #{userId} and file_pid = #{filePid} and file_name = #{fileName}
+        where user_id = #{userId} and file_pid = #{filePid} and file_name = #{fileName} and folder_type=#{folderType}
     </select>
     <select id="selectByUserIdAndFileId" resultType="com.netdisk.pojo.FileInfo">
         select * from file_info
-        where  file_id = #{fileId} and user_id = #{userId}
+        where  file_id = #{fileId} and user_id = #{userId} and folder_type=#{folderType}
     </select>
 </mapper>

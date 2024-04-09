@@ -14,9 +14,11 @@ import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.*;
 import com.netdisk.vo.FileInfoVo;
+import jakarta.mail.Folder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
+import org.mockito.invocation.StubInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -31,10 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Transactional
@@ -52,11 +51,12 @@ public class FileInfoServiceImpl implements FileInfoService {
     String outFileFolder;
     //分页展示分类的文件
     @Override
-    public PageInfo<FileInfoVo> selectPageFileInfo(Integer pageNo, Integer pageSize, String category, String userId) {
+    public PageInfo<FileInfoVo> selectPageFileInfo(Integer pageNo, Integer pageSize,
+                                                   String category, String userId,String filePid) {
         PageHelper.startPage(pageNo, pageSize);
         FileCategoryEnums code = FileCategoryEnums.getByCode(category);
         Integer categoryNum = (code==null) ? null:code.getCategory();//category可能为“all”,此时为null
-        List<FileInfoVo> fileInfoVolist = fileInfoMapper.selectByUserIdAndCategory(categoryNum, userId);
+        List<FileInfoVo> fileInfoVolist = fileInfoMapper.selectByUserIdAndCategory(categoryNum, userId,filePid);
         return new PageInfo<>(fileInfoVolist);
     }
 
@@ -72,9 +72,9 @@ public class FileInfoServiceImpl implements FileInfoService {
             fileId = StringTools.getRandomString(10);
         }
         //是否有同名文件
-//        if (fileInfoMapper.selectSameNameFile(userId,filePid,fileName) != null) {
-//            throw new BusinessException(ResponseCodeEnum.CODE_905);
-//        }
+        if (fileInfoMapper.selectSameNameFile(userId,filePid,fileName,0) != null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_905);
+        }
         //1.秒传
         if(chunkIndex==0) {
             //查询是否已经存在MD5值相同的文件
@@ -177,7 +177,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         Boolean isSuccess = true;
         String coverName = null;
         FileTypeEnums typeEnums = null;
-        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId);
+        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId,0);
         if (fileInfo == null || fileInfo.getStatus() != 0) {
             return;//没找到或者文件不在转码中,不处理
         }
@@ -243,11 +243,11 @@ public class FileInfoServiceImpl implements FileInfoService {
         if(fileId.endsWith(".ts")){
             //读取视频分片
             String realFileId=fileId.split("_")[0];
-            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(realFileId,userId);
+            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(realFileId,userId,0);
             String absPath = fileInfo.getFilePath();
             filePath=absPath.substring(0, absPath.lastIndexOf("."))+"/"+fileId;
         }else {
-            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId,userId);
+            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId,userId,0);
             String absPath = fileInfo.getFilePath();
             //读取m3u8文件
             filePath = absPath.substring(0, absPath.lastIndexOf("."))+"/index.m3u8";
@@ -257,9 +257,36 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     public void getFileInfo(HttpServletResponse response, String fileId, String userId) {
-        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId);
+        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId,0);
         String filePath=fileInfo.getFilePath();
         FileTools.readFile(response,filePath);
+    }
+
+    @Override
+    public FileInfo createFolder(String filePid, String userId, String fileName) {
+        //是否有同名目录
+        if (fileInfoMapper.selectSameNameFile(userId,filePid,fileName,1) != null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_905);
+        }
+        FileInfo info=new FileInfo();
+        info.setFileId(StringTools.getRandomString(10));
+        info.setUserId(userId);
+        info.setFilePid(filePid);
+        info.setFileName(fileName);
+        info.setFolderType(1);//0文件 1目录
+        info.setCreateTime(new Date());
+        info.setLastUpdateTime(new Date());
+        fileInfoMapper.insertFileInfo(info);
+        return info;
+    }
+
+    @Override
+    public List<FileInfo> getFolderInfo(String path, String userId) {
+        List<FileInfo> res=new ArrayList<>();
+        for(String fileId : path.split("/")){
+            res.add(fileInfoMapper.selectByUserIdAndFileId(fileId, userId,1));
+        }
+        return res;
     }
 
 
