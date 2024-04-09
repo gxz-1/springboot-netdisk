@@ -66,15 +66,17 @@ public class FileInfoController {
 
     //读取视频文件
     @RequestMapping("ts/getVideoInfo/{fileId}")
-    public ResponseVO getVideoInfo(HttpServletRequest request,HttpServletResponse response,String fileId){
+    public ResponseVO getVideoInfo(HttpServletRequest request,HttpServletResponse response,
+                                   @PathVariable String fileId){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
         fileInfoService.getVideoInfo(response,fileId,userId);
         return  ResponseVO.getSuccessResponseVO(null);
     }
 
     //读取其他文件
-    @RequestMapping("TS/getFile/{fileId}")
-    public ResponseVO getFileInfo(HttpServletRequest request,HttpServletResponse response,String fileId){
+    @RequestMapping("getFile/{fileId}")
+    public ResponseVO getFileInfo(HttpServletRequest request,HttpServletResponse response,
+                                  @PathVariable String fileId){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
         fileInfoService.getFileInfo(response,fileId,userId);
         return  ResponseVO.getSuccessResponseVO(null);

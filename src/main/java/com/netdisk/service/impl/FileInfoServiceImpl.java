@@ -240,14 +240,14 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Override
     public void getVideoInfo(HttpServletResponse response,String fileId,String userId) {
         String filePath;
-        if(userId.endsWith(".ts")){
+        if(fileId.endsWith(".ts")){
             //读取视频分片
-            String realUserId=fileId.split("_")[0];
-            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(realUserId, userId);
+            String realFileId=fileId.split("_")[0];
+            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(realFileId,userId);
             String absPath = fileInfo.getFilePath();
             filePath=absPath.substring(0, absPath.lastIndexOf("."))+"/"+fileId;
         }else {
-            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(userId, userId);
+            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId,userId);
             String absPath = fileInfo.getFilePath();
             //读取m3u8文件
             filePath = absPath.substring(0, absPath.lastIndexOf("."))+"/index.m3u8";
@@ -257,7 +257,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     public void getFileInfo(HttpServletResponse response, String fileId, String userId) {
-        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(userId, userId);
+        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId);
         String filePath=fileInfo.getFilePath();
         FileTools.readFile(response,filePath);
     }
