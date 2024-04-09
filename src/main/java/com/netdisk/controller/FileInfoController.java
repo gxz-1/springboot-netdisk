@@ -3,6 +3,7 @@ package com.netdisk.controller;
 import com.github.pagehelper.PageInfo;
 import com.netdisk.enums.FileCategoryEnums;
 import com.netdisk.service.FileInfoService;
+import com.netdisk.service.impl.FileInfoServiceImpl;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
@@ -27,6 +28,7 @@ public class FileInfoController {
     FileInfoService fileInfoService;
 
     @RequestMapping(value = "loadDataList",method = RequestMethod.POST)
+    //获取文件列表
     public ResponseVO loadDataList(HttpServletRequest request,
                                    @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
                                    String category){
@@ -36,11 +38,11 @@ public class FileInfoController {
     }
 
     @RequestMapping(value = "uploadFile",method = RequestMethod.POST)
+    //上传文件
     //前端进行了Md5校验和文件分片，传给后端MD5值fileMd5，以及分片索引chunkIndex，分片总数chunks
     public ResponseVO uploadFile(HttpServletRequest request,HttpServletResponse response,
                                  String fileId, MultipartFile file,String fileName,String filePid,
                                  String fileMd5,Integer chunkIndex,Integer chunks){
-
         Map result = fileInfoService.uploadFile(request,response,fileId,file,fileName,filePid,fileMd5,chunkIndex,chunks);
         return ResponseVO.getSuccessResponseVO(result);
     }
@@ -48,6 +50,7 @@ public class FileInfoController {
     @Value("${my.outFileFolder}")
     String outFileFolder;
 
+    //获取缩略图
     @RequestMapping("getImage/{coverName}")//匹配任何字符直到URL的结束（由于路径本身包含斜杠/）
     public void getImage(HttpServletResponse response,
             @PathVariable String coverName){
@@ -59,5 +62,21 @@ public class FileInfoController {
         response.setContentType(contentType);
         response.setHeader("Cache-Control", "max-age=2592000");
         FileTools.readFile(response, outFileFolder+"/file/"+coverName);
+    }
+
+    //读取视频文件
+    @RequestMapping("ts/getVideoInfo/{fileId}")
+    public ResponseVO getVideoInfo(HttpServletRequest request,HttpServletResponse response,String fileId){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        fileInfoService.getVideoInfo(response,fileId,userId);
+        return  ResponseVO.getSuccessResponseVO(null);
+    }
+
+    //读取其他文件
+    @RequestMapping("TS/getFile/{fileId}")
+    public ResponseVO getFileInfo(HttpServletRequest request,HttpServletResponse response,String fileId){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        fileInfoService.getFileInfo(response,fileId,userId);
+        return  ResponseVO.getSuccessResponseVO(null);
     }
 }

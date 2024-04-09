@@ -17,4 +17,9 @@ public interface FileInfoService {
 
     //将分片的文件合并
     void transferFile(String fileId,String userId);
+
+
+    void getVideoInfo(HttpServletResponse response,String fileId,String userId);
+
+    void getFileInfo(HttpServletResponse response, String fileId, String userId);
 }

@@ -38,6 +38,8 @@ public class ValidationAspect {
                 //对参数名为"email"的参数进行校验
                 if(paraName.equals("email")){
                     regexCheck(VerifyRegexEnum.EMAIL.getRegex(),value);
+                } else if (paraName.equals("password")) {
+                    regexCheck(VerifyRegexEnum.PASSWORD.getRegex(), value);
                 }
                 //对String Integer Long这三个类型做校验
                 else if(typeName.equals("java.lang.String") || typeName.equals("java.lang.Integer") || typeName.equals("java.lang.Long")){

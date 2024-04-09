@@ -12,10 +12,7 @@ import com.netdisk.mappers.UserInfoMapper;
 import com.netdisk.pojo.FileInfo;
 import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.FileInfoService;
-import com.netdisk.utils.CookieTools;
-import com.netdisk.utils.ProcessUtils;
-import com.netdisk.utils.ScaleFilter;
-import com.netdisk.utils.StringTools;
+import com.netdisk.utils.*;
 import com.netdisk.vo.FileInfoVo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -217,7 +214,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 
         if(typeEnums == FileTypeEnums.VIDEO){
             //视频文件切割
-            cutVideo(fileId,fileInfo.getFilePath());
+            FileTools.cutVideo(fileId,fileInfo.getFilePath());
             //生成缩略图
             coverName=userId+fileId+".png";
             ScaleFilter.createCover4Video(new File(fileInfo.getFilePath()),150,new File(outFileFolder+"/file/"+coverName));
@@ -240,24 +237,30 @@ public class FileInfoServiceImpl implements FileInfoService {
         fileInfoMapper.updateFileInfo(fileInfo); //TODO 可能存在写后写问题
     }
 
-    private void cutVideo(String fileId,String videoPath){
-        //创建同名切片目录
-        File tsFolder = new File(videoPath.substring(0, videoPath.lastIndexOf(".")));
-        if(!tsFolder.exists()){
-            tsFolder.mkdirs();
+    @Override
+    public void getVideoInfo(HttpServletResponse response,String fileId,String userId) {
+        String filePath;
+        if(userId.endsWith(".ts")){
+            //读取视频分片
+            String realUserId=fileId.split("_")[0];
+            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(realUserId, userId);
+            String absPath = fileInfo.getFilePath();
+            filePath=absPath.substring(0, absPath.lastIndexOf("."))+"/"+fileId;
+        }else {
+            FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(userId, userId);
+            String absPath = fileInfo.getFilePath();
+            //读取m3u8文件
+            filePath = absPath.substring(0, absPath.lastIndexOf("."))+"/index.m3u8";
         }
-        //调用ffmpeg的命令
-        final String CMD_TRANSFER_2TS = "ffmpeg -y -i %s  -vcodec copy -acodec copy -vbsf h264_mp4toannexb %s";
-        final String CMD_CUT_TS = "ffmpeg -i %s -c copy -map 0 -f segment -segment_list %s -segment_time 30 %s/%s_%%4d.ts";
-        //生成ts文件
-        String tsPath=tsFolder+"/index.ts";
-        String cmd=String.format(CMD_TRANSFER_2TS,videoPath,tsPath);
-        ProcessUtils.executeCommand(cmd,false);
-        //生成索引文件.m3u8和切片.ts
-        cmd=String.format(CMD_CUT_TS,tsPath,tsFolder.getPath()+"/index.m3u8",tsFolder.getPath(),fileId);
-        ProcessUtils.executeCommand(cmd,false);
-        //删除index.ts
-        new File(tsPath).delete();
+        FileTools.readFile(response,filePath);
     }
+
+    @Override
+    public void getFileInfo(HttpServletResponse response, String fileId, String userId) {
+        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(userId, userId);
+        String filePath=fileInfo.getFilePath();
+        FileTools.readFile(response,filePath);
+    }
+
 
 }
