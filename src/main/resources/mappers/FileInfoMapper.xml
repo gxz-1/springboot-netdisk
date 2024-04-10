@@ -90,10 +90,30 @@
 
     <select id="selectSameNameFile" resultType="com.netdisk.pojo.FileInfo">
         select * from file_info
-        where user_id = #{userId} and file_pid = #{filePid} and file_name = #{fileName} and folder_type=#{folderType}
+        where user_id = #{userId} and file_pid = #{filePid} and file_name = #{fileName}
+        <if test="folderType != null">and folder_type=#{folderType}</if>
+        and del_flag = 2
     </select>
+
     <select id="selectByUserIdAndFileId" resultType="com.netdisk.pojo.FileInfo">
         select * from file_info
-        where  file_id = #{fileId} and user_id = #{userId} and folder_type=#{folderType}
+        where  file_id = #{fileId} and user_id = #{userId}
+        <if test="folderType != null"> and folder_type=#{folderType}</if>
+        and del_flag = 2
+    </select>
+
+    <select id="selectFoldersByFilePid" resultType="com.netdisk.vo.FileInfoVo">
+        select file_id, file_pid, file_size, file_name, file_cover, create_time, last_update_time,
+        folder_type, file_category, file_type, status
+        from file_info
+        where file_pid = #{filePid} and user_id = #{userId}
+        <if test="fileIdList!=null">
+        and file_id not in
+            <foreach item="fileId" collection="fileIdList" open="(" separator="," close=")">
+            #{fileId}
+            </foreach>
+        </if>
+        and folder_type=1 and del_flag = 2
+        order by create_time desc
     </select>
 </mapper>

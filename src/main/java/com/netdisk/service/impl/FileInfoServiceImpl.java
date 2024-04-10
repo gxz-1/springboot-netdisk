@@ -263,7 +263,7 @@ public class FileInfoServiceImpl implements FileInfoService {
     }
 
     @Override
-    public FileInfo createFolder(String filePid, String userId, String fileName) {
+    public FileInfoVo createFolder(String filePid, String userId, String fileName) {
         //是否有同名目录
         if (fileInfoMapper.selectSameNameFile(userId,filePid,fileName,1) != null) {
             throw new BusinessException(ResponseCodeEnum.CODE_905);
@@ -277,16 +277,52 @@ public class FileInfoServiceImpl implements FileInfoService {
         info.setCreateTime(new Date());
         info.setLastUpdateTime(new Date());
         fileInfoMapper.insertFileInfo(info);
-        return info;
+        return new FileInfoVo(info);
     }
 
     @Override
-    public List<FileInfo> getFolderInfo(String path, String userId) {
-        List<FileInfo> res=new ArrayList<>();
+    public List<FileInfoVo> getFolderInfo(String path, String userId) {
+        List<FileInfoVo> res=new ArrayList<>();
         for(String fileId : path.split("/")){
-            res.add(fileInfoMapper.selectByUserIdAndFileId(fileId, userId,1));
+            FileInfoVo vo=new FileInfoVo(fileInfoMapper.selectByUserIdAndFileId(fileId, userId,1));
+            res.add(vo);
         }
         return res;
+    }
+
+    @Override
+    public FileInfoVo fileRename(String fileId, String userId, String fileName) {
+        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId,userId,null);
+        //文件是否存在
+        if(fileInfo==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_906);
+        }
+        Integer folderType = fileInfo.getFolderType();
+        //对于文件要加上原来的后缀名
+        if(folderType==0){
+            String originFileName = fileInfo.getFileName();
+            fileName+=StringTools.getFileSuffix(originFileName);
+        }
+        //是否有同名文件或目录
+        if (fileInfoMapper.selectSameNameFile(userId,fileInfo.getFilePid(),fileName,folderType) != null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_905);
+        }
+        //完成重命名
+        fileInfo.setFileName(fileName);
+        fileInfo.setLastUpdateTime(new Date());
+        fileInfoMapper.updateFileInfo(fileInfo);
+        return new FileInfoVo(fileInfo);
+    }
+
+    @Override
+    public List<FileInfoVo> loadAllFolder(String userId, String filePid, String currentFileIds) {
+        String[] fileIdList=null;
+        //TODO 不需要currentFileIds
+//        if(!StringTools.isEmpty(currentFileIds)){
+//            fileIdList = currentFileIds.split(",");
+//        }
+        List<FileInfoVo> info = fileInfoMapper.selectFoldersByFilePid(filePid,userId,fileIdList);
+        return info;
     }
 
 

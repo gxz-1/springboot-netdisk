@@ -26,7 +26,11 @@ public interface FileInfoService {
 
     void getFileInfo(HttpServletResponse response, String fileId, String userId);
 
-    FileInfo createFolder(String filePid, String userId, String fileName);
+    FileInfoVo createFolder(String filePid, String userId, String fileName);
 
-    List<FileInfo> getFolderInfo(String path, String userId);
+    List<FileInfoVo> getFolderInfo(String path, String userId);
+
+    FileInfoVo fileRename(String fileId, String userId, String fileName);
+
+    List<FileInfoVo> loadAllFolder(String userId, String filePid, String currentFileIds);
 }

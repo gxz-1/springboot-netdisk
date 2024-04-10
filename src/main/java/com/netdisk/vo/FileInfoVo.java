@@ -1,5 +1,6 @@
 package com.netdisk.vo;
 
+import com.netdisk.pojo.FileInfo;
 import lombok.Data;
 import java.util.Date;
 
@@ -16,4 +17,21 @@ public class FileInfoVo {
     private Integer fileCategory;
     private Integer fileType;
     private Integer status;
+
+    //TODO mapper需要提供无参构造才能自动匹配
+    public FileInfoVo(){}
+
+    public FileInfoVo(FileInfo info){
+        fileId=info.getFileId();
+        filePid=info.getFilePid();
+        fileSize=info.getFileSize();
+        fileName=info.getFileName();
+        fileCover=info.getFileCover();
+        createTime=info.getCreateTime();
+        lastUpdateTime=info.getLastUpdateTime();
+        folderType=info.getFolderType();
+        fileCategory=info.getFileCategory();
+        fileType=info.getFileType();
+        status=info.getStatus();
+    }
 }

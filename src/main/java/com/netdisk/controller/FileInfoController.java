@@ -1,7 +1,9 @@
 package com.netdisk.controller;
 
 import com.github.pagehelper.PageInfo;
+import com.netdisk.advice.BusinessException;
 import com.netdisk.enums.FileCategoryEnums;
+import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.pojo.FileInfo;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.service.impl.FileInfoServiceImpl;
@@ -68,11 +70,10 @@ public class FileInfoController {
 
     //读取视频文件
     @RequestMapping("ts/getVideoInfo/{fileId}")
-    public ResponseVO getVideoInfo(HttpServletRequest request,HttpServletResponse response,
+    public void getVideoInfo(HttpServletRequest request,HttpServletResponse response,
                                    @PathVariable String fileId){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
         fileInfoService.getVideoInfo(response,fileId,userId);
-        return  ResponseVO.getSuccessResponseVO(null);
     }
 
     //读取其他文件
@@ -88,15 +89,33 @@ public class FileInfoController {
     public ResponseVO createFolder(HttpServletRequest request,
                                    String filePid,String fileName){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        FileInfo info = fileInfoService.createFolder(filePid,userId,fileName);
-        return ResponseVO.getSuccessResponseVO(info);
+        FileInfoVo fileInfoVo = fileInfoService.createFolder(filePid,userId,fileName);
+        return ResponseVO.getSuccessResponseVO(fileInfoVo);
     }
 
     //获取文件目录，path按层次传入多个目录的fileid
     @RequestMapping(value = "getFolderInfo",method = RequestMethod.POST)
     public ResponseVO getFolderInfo(HttpServletRequest request,String path){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        List<FileInfo> res = fileInfoService.getFolderInfo(path,userId);
+        List<FileInfoVo> res = fileInfoService.getFolderInfo(path,userId);
         return ResponseVO.getSuccessResponseVO(res);
+    }
+
+    //重命名
+    @RequestMapping(value = "rename",method = RequestMethod.POST)
+    public ResponseVO fileRename(HttpServletRequest request,
+                                 String fileId,String fileName){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        FileInfoVo fileInfoVo = fileInfoService.fileRename(fileId,userId,fileName);
+        return ResponseVO.getSuccessResponseVO(fileInfoVo);
+    }
+
+    //获取当前层级filePid下除选中currentFileIds以外的所有目录,用于批量移动currentFileIds
+    @RequestMapping(value = "loadAllFolder",method = RequestMethod.POST)
+    public ResponseVO loadAllFolder(HttpServletRequest request,
+                                 String filePid,String currentFileIds){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        List<FileInfoVo> fileInfoVo = fileInfoService.loadAllFolder(userId,filePid,currentFileIds);
+        return ResponseVO.getSuccessResponseVO(fileInfoVo);
     }
 }
