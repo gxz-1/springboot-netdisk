@@ -127,4 +127,24 @@ public class FileInfoController {
         fileInfoService.changeFileFolder(fileIds,userId,filePid);
         return ResponseVO.getSuccessResponseVO(null);
     }
+
+    @RequestMapping("createDownloadUrl/{fileId}")
+    public ResponseVO createDownloadUrl(HttpServletRequest request, @PathVariable String fileId){
+        return ResponseVO.getSuccessResponseVO(fileId);// TODO 后续考虑对下载的code进行token加密
+    }
+
+    @RequestMapping("download/{code}")
+    public void download(HttpServletRequest request, HttpServletResponse response,
+                               @PathVariable String code){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        fileInfoService.downloadFile(request,response,code,userId);
+    }
+
+    //批量删除文件
+    @RequestMapping(value = "delFile",method = RequestMethod.POST)
+    public ResponseVO deleteFile(HttpServletRequest request, String fileIds){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        fileInfoService.deleteFile(userId,fileIds);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
 }

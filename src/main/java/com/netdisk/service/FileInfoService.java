@@ -36,4 +36,7 @@ public interface FileInfoService {
 
     void changeFileFolder(String fileIds, String userId, String filePid);
 
+    void downloadFile(HttpServletRequest request,HttpServletResponse response,String code, String userId);
+
+    void deleteFile(String userId, String fileIds);
 }

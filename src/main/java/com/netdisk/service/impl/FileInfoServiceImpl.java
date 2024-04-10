@@ -33,6 +33,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.*;
 
 @Service
@@ -84,6 +86,9 @@ public class FileInfoServiceImpl implements FileInfoService {
                 if (dbFile.getFileSize() + useSpace > totalSpace) {
                     throw new BusinessException(ResponseCodeEnum.CODE_904);
                 }
+                //根据文件后缀获取文件类型
+                String fileSuffix=StringTools.getFileSuffix(fileName);
+                FileTypeEnums typeEnums = FileTypeEnums.getFileTypeBySuffix(fileSuffix);
                 //秒传
                 dbFile.setUserId(userId);
                 dbFile.setFileId(fileId);
@@ -92,6 +97,10 @@ public class FileInfoServiceImpl implements FileInfoService {
                 dbFile.setFileMd5(fileMd5);
                 dbFile.setCreateTime(new Date());
                 dbFile.setLastUpdateTime(new Date());
+                dbFile.setDelFlag(2);
+                dbFile.setStatus(2);
+                dbFile.setFileCategory(typeEnums.getCategory().getCategory());
+                dbFile.setFileType(typeEnums.getType());
                 fileInfoMapper.insertFileInfo(dbFile);
                 //更新存储空间
                 UserInfo info = new UserInfo();
@@ -187,7 +196,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         if (!tempDirPath.exists()) {
             return;//临时文件不存在了
         }
-        //开始合并
+        //开始合并文件
         try {
             RandomAccessFile writeFile = new RandomAccessFile(targetFile, "rw");
             byte[] b = new byte[1024 * 10];
@@ -207,7 +216,7 @@ public class FileInfoServiceImpl implements FileInfoService {
             }
         } catch (Exception e) {
             isSuccess=false;
-            throw new BusinessException("合并文件失败");
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
         //视频切割，生成缩略图
         typeEnums=FileTypeEnums.getByType(fileInfo.getFileType());
@@ -222,11 +231,11 @@ public class FileInfoServiceImpl implements FileInfoService {
             coverName=userId+fileId+"_.png";//多加一个_区分缩略图和原图
             Boolean ok = ScaleFilter.createThumbnailWidthFFmpeg(new File(fileInfo.getFilePath()), 150,
                     new File(outFileFolder+"/file/"+coverName), false);
-            if(!ok){//压缩失败，例如原图太小
+            if(!ok){//压缩失败则复制原图，例如原图太小
                 try {
                     FileUtils.copyFile(new File(fileInfo.getFilePath()),new File(outFileFolder+"/file/"+coverName));
                 } catch (IOException e) {
-                    throw new BusinessException("复制图片失败");
+                    throw new BusinessException(ResponseCodeEnum.CODE_600);
                 }
             }
         }
@@ -295,7 +304,7 @@ public class FileInfoServiceImpl implements FileInfoService {
         FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId,userId,null);
         //文件是否存在
         if(fileInfo==null){
-            throw new BusinessException(ResponseCodeEnum.CODE_906);
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
         Integer folderType = fileInfo.getFolderType();
         //对于文件要加上原来的后缀名
@@ -327,7 +336,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     public void changeFileFolder(String fileIds, String userId, String filePid) {
-        //校验filePid是否存在,是否属于当前用户
+        //校验目录filePid是否存在,是否属于当前用户
         if(fileInfoMapper.selectByUserIdAndFileId(filePid, userId, 1)==null){
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
@@ -345,6 +354,53 @@ public class FileInfoServiceImpl implements FileInfoService {
             info.setFilePid(filePid);
             info.setLastUpdateTime(new Date());
             fileInfoMapper.updateFileInfo(info);
+        }
+    }
+
+    @Override
+    public void downloadFile(HttpServletRequest request,HttpServletResponse response,String code, String userId) {
+        String fileId=code;
+        //校验文件是否存在
+        FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, 0);
+        if(info==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        response.setContentType("application/x-msdownload; charset=UTF-8");
+        String fileName=info.getFileName();
+        try {
+            if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0) {//IE浏览器
+                    fileName = URLEncoder.encode(fileName, "UTF-8");
+            } else {
+                fileName = new String(fileName.getBytes("UTF-8"), "ISO8859-1");
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        response.setHeader("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
+        FileTools.readFile(response, info.getFilePath());
+    }
+
+    //删除批量文件
+    @Override
+    public void deleteFile(String userId, String fileIds) {
+        //用队列存储所有待删除的文件，遇到文件夹时将目录下所有文件加入
+        LinkedList<String> queue=new LinkedList<>();
+        for (String fileId:fileIds.split(",")){
+            queue.offer(fileId);
+        }
+        while (!queue.isEmpty()){
+            //删除文件，即修改delFlag=1。进入回收站
+            FileInfo info = fileInfoMapper.selectByUserIdAndFileId(queue.poll(),userId,null);
+            if(info==null){
+                continue;
+            }
+            fileInfoMapper.updateDelFlagByFileIdAndUserId(info.getFileId(), userId, 1);
+            //如果删除的是目录，将下面的所有文件加入queue
+            if(info.getFolderType()==1){
+                for (FileInfoVo vo: fileInfoMapper.selectByUserIdAndCategory(null, userId, info.getFileId())){
+                    queue.offer(vo.getFileId());
+                }
+            }
         }
     }
 

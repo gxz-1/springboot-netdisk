@@ -21,5 +21,7 @@ public interface FileInfoMapper {
     FileInfo selectByUserIdAndFileId(String fileId, String userId,Integer folderType);
 
     List<FileInfoVo> selectFoldersByFilePid(String filePid, String userId, String[] fileIdList);
+
+    void updateDelFlagByFileIdAndUserId(String fileId, String userId, Integer delFlag);
 }
 

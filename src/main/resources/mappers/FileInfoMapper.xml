@@ -63,7 +63,11 @@
             <if test="recoveryTime != null">recovery_time = #{recoveryTime},</if>
             <if test="delFlag != null">del_flag = #{delFlag}</if>
         </set>
-        WHERE user_id = #{userId} and file_id = #{fileId};
+        WHERE user_id = #{userId} and file_id = #{fileId}
+    </update>
+
+    <update id="updateDelFlagByFileIdAndUserId">
+        UPDATE file_info set del_flag = #{delFlag} where user_id = #{userId} and file_id = #{fileId}
     </update>
 
     <select id="selectByUserIdAndCategory" resultType="com.netdisk.vo.FileInfoVo">
@@ -72,9 +76,9 @@
         folder_type, file_category, file_type, status
         from file_info
         where user_id = #{userId}
-        and file_pid=#{filePid}
-        and del_flag = 2
+        <if test="filePid != null"> and file_pid=#{filePid}</if>
         <if test="category != null"> and file_category = #{category}</if>
+        and del_flag = 2
         order by last_update_time desc
     </select>
 
