@@ -325,5 +325,28 @@ public class FileInfoServiceImpl implements FileInfoService {
         return info;
     }
 
+    @Override
+    public void changeFileFolder(String fileIds, String userId, String filePid) {
+        //校验filePid是否存在,是否属于当前用户
+        if(fileInfoMapper.selectByUserIdAndFileId(filePid, userId, 1)==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        for (String fileId:fileIds.split(",")){
+            //不能将自己移动到自己下面
+            if(fileId.equals(filePid)){
+                continue;
+            }
+            FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, null);
+            //移动后的目录下是否有同名的文件或目录
+            if (fileInfoMapper.selectSameNameFile(userId,filePid,info.getFileName(),info.getFolderType()) != null) {
+                throw new BusinessException(ResponseCodeEnum.CODE_905);
+            }
+            //移动文件，即修改pid
+            info.setFilePid(filePid);
+            info.setLastUpdateTime(new Date());
+            fileInfoMapper.updateFileInfo(info);
+        }
+    }
+
 
 }

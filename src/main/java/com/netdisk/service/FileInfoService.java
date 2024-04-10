@@ -33,4 +33,7 @@ public interface FileInfoService {
     FileInfoVo fileRename(String fileId, String userId, String fileName);
 
     List<FileInfoVo> loadAllFolder(String userId, String filePid, String currentFileIds);
+
+    void changeFileFolder(String fileIds, String userId, String filePid);
+
 }

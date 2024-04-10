@@ -118,4 +118,13 @@ public class FileInfoController {
         List<FileInfoVo> fileInfoVo = fileInfoService.loadAllFolder(userId,filePid,currentFileIds);
         return ResponseVO.getSuccessResponseVO(fileInfoVo);
     }
+
+    //批量移动文件fileIds到目录filePid下面
+    @RequestMapping(value = "changeFileFolder",method = RequestMethod.POST)
+    public ResponseVO changeFileFolder(HttpServletRequest request,
+                                    String fileIds,String filePid){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        fileInfoService.changeFileFolder(fileIds,userId,filePid);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
 }
