@@ -93,7 +93,7 @@ public class FileInfoController {
         return ResponseVO.getSuccessResponseVO(fileInfoVo);
     }
 
-    //获取文件目录，path按层次传入多个目录的fileid
+    //获取路径path下所有文件以及目录，path多个目录的fileid
     @RequestMapping(value = "getFolderInfo",method = RequestMethod.POST)
     public ResponseVO getFolderInfo(HttpServletRequest request,String path){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
@@ -110,7 +110,7 @@ public class FileInfoController {
         return ResponseVO.getSuccessResponseVO(fileInfoVo);
     }
 
-    //获取当前层级filePid下除选中currentFileIds以外的所有目录,用于批量移动currentFileIds
+    //获取所有目录
     @RequestMapping(value = "loadAllFolder",method = RequestMethod.POST)
     public ResponseVO loadAllFolder(HttpServletRequest request,
                                  String filePid,String currentFileIds){
