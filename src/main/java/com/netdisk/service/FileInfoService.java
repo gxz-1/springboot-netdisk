@@ -3,6 +3,7 @@ package com.netdisk.service;
 import com.github.pagehelper.PageInfo;
 import com.netdisk.pojo.FileInfo;
 import com.netdisk.vo.FileInfoVo;
+import com.netdisk.vo.PageFileInfoVo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileInfoService {
-    PageInfo<FileInfoVo> selectPageFileInfo(Integer pageNo, Integer pageSize,
-                                            String category, String userId,String filePid);
+    PageFileInfoVo selectPageFileInfo(Integer pageNo, Integer pageSize,
+                                      String category, String userId, String filePid);
 
     Map uploadFile(HttpServletRequest request, HttpServletResponse response,
                           String fileId, MultipartFile file, String fileName, String filePid,

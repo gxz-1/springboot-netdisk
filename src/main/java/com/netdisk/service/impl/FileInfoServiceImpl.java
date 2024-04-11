@@ -14,6 +14,7 @@ import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.*;
 import com.netdisk.vo.FileInfoVo;
+import com.netdisk.vo.PageFileInfoVo;
 import jakarta.mail.Folder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,13 +54,14 @@ public class FileInfoServiceImpl implements FileInfoService {
     String outFileFolder;
     //分页展示分类的文件
     @Override
-    public PageInfo<FileInfoVo> selectPageFileInfo(Integer pageNo, Integer pageSize,
-                                                   String category, String userId,String filePid) {
+    public PageFileInfoVo selectPageFileInfo(Integer pageNo, Integer pageSize,
+                                             String category, String userId, String filePid) {
         PageHelper.startPage(pageNo, pageSize);
         FileCategoryEnums code = FileCategoryEnums.getByCode(category);
         Integer categoryNum = (code==null) ? null:code.getCategory();//category可能为“all”,此时为null
         List<FileInfoVo> fileInfoVolist = fileInfoMapper.selectByUserIdAndCategory(categoryNum, userId,filePid);
-        return new PageInfo<>(fileInfoVolist);
+        PageInfo<FileInfoVo> pageInfo = new PageInfo<>(fileInfoVolist);
+        return new PageFileInfoVo(pageInfo.getTotal(),pageInfo.getPageSize(),pageInfo.getPageNum(),pageInfo.getPages(),pageInfo.getList());
     }
 
     //文件上传

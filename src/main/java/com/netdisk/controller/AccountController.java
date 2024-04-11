@@ -118,7 +118,7 @@ public class AccountController {
     }
 
     //重置密码
-    @RequestMapping(value = "/netdisk/api ",method = RequestMethod.POST)
+    @RequestMapping(value = "resetPwd",method = RequestMethod.POST)
     public ResponseVO resetPwd(HttpServletRequest request, HttpServletResponse response,
                                String email,String password,String checkCode,String emailCode){
         // 从请求中获取Cookie中的验证码

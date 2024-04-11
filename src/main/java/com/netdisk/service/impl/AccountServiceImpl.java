@@ -90,9 +90,11 @@ public class AccountServiceImpl implements AccountService {
             throw new BusinessException(ResponseCodeEnum.CODE_806);
         }
         long diffMinutes = (new Date().getTime() - emailCode.getCreateTime().getTime()) / (60 * 1000);
-        if(emailCode.getStatus()==1 || diffMinutes > 5){
+        if(emailCode.getStatus()==1 || diffMinutes > invalidEmailTime){//超时时间 min
             throw new BusinessException(ResponseCodeEnum.CODE_807);
         }
+        //使之前的验证码失效
+        emailCodeMapper.disableEmailCode(email);//TODO 这里是逻辑删除，后续考虑定期清理数据库
     }
 
     //注册用户

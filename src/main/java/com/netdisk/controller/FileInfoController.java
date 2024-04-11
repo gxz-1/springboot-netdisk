@@ -10,6 +10,7 @@ import com.netdisk.service.impl.FileInfoServiceImpl;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
+import com.netdisk.vo.PageFileInfoVo;
 import com.netdisk.vo.ResponseVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,10 +35,10 @@ public class FileInfoController {
     @RequestMapping(value = "loadDataList",method = RequestMethod.POST)
     //获取文件列表
     public ResponseVO loadDataList(HttpServletRequest request,
-                                   @RequestParam(defaultValue = "1") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
+                                   @RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
                                    String category,String filePid){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        PageInfo<FileInfoVo> pageInfo = fileInfoService.selectPageFileInfo(pageNo,pageSize,category, userId,filePid);
+        PageFileInfoVo pageInfo = fileInfoService.selectPageFileInfo(pageNo,pageSize,category, userId,filePid);
         return ResponseVO.getSuccessResponseVO(pageInfo);
     }
 
