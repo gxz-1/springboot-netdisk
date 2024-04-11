@@ -339,7 +339,7 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Override
     public void changeFileFolder(String fileIds, String userId, String filePid) {
         //校验目录filePid是否存在,是否属于当前用户
-        if(fileInfoMapper.selectByUserIdAndFileId(filePid, userId, 1)==null){
+        if(!filePid.equals("0") && fileInfoMapper.selectByUserIdAndFileId(filePid, userId, 1)==null){
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
         for (String fileId:fileIds.split(",")){
