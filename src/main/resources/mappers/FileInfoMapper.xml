@@ -67,7 +67,19 @@
     </update>
 
     <update id="updateDelFlagByFileIdAndUserId">
-        UPDATE file_info set del_flag = #{delFlag} where user_id = #{userId} and file_id = #{fileId}
+        UPDATE file_info set del_flag = #{delFlag}
+        <choose>
+        <!-- 删除文件时更新recovery_time-->
+            <when test="delFlag != 2">
+                ,recovery_time = #{time}
+            </when>
+        <!-- 还原文件时到根目录并更新lastUpdateTime-->
+            <otherwise>
+                ,file_pid = 0
+                ,last_update_time = #{time}
+            </otherwise>
+        </choose>
+        where user_id = #{userId} and file_id = #{fileId}
     </update>
 
     <select id="selectByUserIdAndCategory" resultType="com.netdisk.vo.FileInfoVo">
@@ -79,12 +91,12 @@
         <if test="filePid != null"> and file_pid=#{filePid}</if>
         <if test="category != null"> and file_category = #{category}</if>
         and del_flag = 2
-        order by last_update_time desc
+        order by folder_type desc, last_update_time desc
     </select>
 
     <select id="selectUseSpace" resultType="java.lang.Long">
         select ifnull(sum(file_size),0) from file_info
-        where user_id = #{userId}
+        where user_id = #{userId} and del_flag = 2
     </select>
 
     <select id="selectOneByMD5" resultType="com.netdisk.pojo.FileInfo">
@@ -96,7 +108,7 @@
         select * from file_info
         where user_id = #{userId} and file_pid = #{filePid} and file_name = #{fileName}
         <if test="folderType != null">and folder_type=#{folderType}</if>
-        and del_flag = 2
+        and del_flag = 2 limit 1
     </select>
 
     <select id="selectByUserIdAndFileId" resultType="com.netdisk.pojo.FileInfo">
@@ -111,13 +123,20 @@
         folder_type, file_category, file_type, status
         from file_info
         where file_pid = #{filePid} and user_id = #{userId}
-        <if test="fileIdList!=null">
-        and file_id not in
-            <foreach item="fileId" collection="fileIdList" open="(" separator="," close=")">
-            #{fileId}
-            </foreach>
-        </if>
         and folder_type=1 and del_flag = 2
-        order by create_time desc
+        order by last_update_time desc
+    </select>
+
+    <select id="selectDelFileList" resultType="com.netdisk.vo.FileInfoVo">
+        select
+        file_id, file_pid, file_size, file_name, file_cover, create_time, last_update_time,
+        folder_type, file_category, file_type, status
+        from file_info
+        where user_id = #{userId} and del_flag = 1
+        order by recovery_time desc
+    </select>
+    <select id="selectDelFileByUserIdAndFileId" resultType="com.netdisk.pojo.FileInfo">
+        select * from file_info
+        where user_id= #{userId} and file_id=#{fileId} and del_flag=1
     </select>
 </mapper>

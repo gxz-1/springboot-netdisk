@@ -12,20 +12,20 @@ import com.netdisk.mappers.UserInfoMapper;
 import com.netdisk.pojo.FileInfo;
 import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.FileInfoService;
-import com.netdisk.utils.*;
+import com.netdisk.utils.CookieTools;
+import com.netdisk.utils.FileTools;
+import com.netdisk.utils.ScaleFilter;
+import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
 import com.netdisk.vo.PageFileInfoVo;
-import jakarta.mail.Folder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
-import org.mockito.invocation.StubInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionManager;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -327,12 +327,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     public List<FileInfoVo> loadAllFolder(String userId, String filePid, String currentFileIds) {
-        String[] fileIdList=null;
-        //TODO 不需要currentFileIds
-//        if(!StringTools.isEmpty(currentFileIds)){
-//            fileIdList = currentFileIds.split(",");
-//        }
-        List<FileInfoVo> info = fileInfoMapper.selectFoldersByFilePid(filePid,userId,fileIdList);
+        List<FileInfoVo> info = fileInfoMapper.selectFoldersByFilePid(filePid,userId);
         return info;
     }
 
@@ -384,7 +379,9 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     //删除批量文件
     @Override
-    public void deleteFile(String userId, String fileIds) {
+    public void deleteFile(HttpServletRequest request,HttpServletResponse response,
+                           String userId, String fileIds) {
+        Long useSpace= Long.valueOf(CookieTools.getCookieValue(request,null,"useSpace",false));
         //用队列存储所有待删除的文件，遇到文件夹时将目录下所有文件加入
         LinkedList<String> queue=new LinkedList<>();
         for (String fileId:fileIds.split(",")){
@@ -396,14 +393,20 @@ public class FileInfoServiceImpl implements FileInfoService {
             if(info==null){
                 continue;
             }
-            fileInfoMapper.updateDelFlagByFileIdAndUserId(info.getFileId(), userId, 1);
-            //如果删除的是目录，将下面的所有文件加入queue
+            //目录直接删除delFlag=0，文件放入回收站delFlag=1
             if(info.getFolderType()==1){
+                fileInfoMapper.updateDelFlagByFileIdAndUserId(info.getFileId(), userId, 0,new Date());
+                //如果删除的是目录，将下面的所有文件加入queue
                 for (FileInfoVo vo: fileInfoMapper.selectByUserIdAndCategory(null, userId, info.getFileId())){
                     queue.offer(vo.getFileId());
                 }
+            }else {
+                fileInfoMapper.updateDelFlagByFileIdAndUserId(info.getFileId(), userId, 1,new Date());
+                useSpace-=info.getFileSize();
             }
         }
+        //更新使用空间
+        CookieTools.addCookie(response,"useSpace", String.valueOf(useSpace),"/",true,-1);
     }
 
 

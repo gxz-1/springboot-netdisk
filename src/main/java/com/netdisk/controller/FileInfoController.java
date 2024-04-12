@@ -143,9 +143,10 @@ public class FileInfoController {
 
     //批量删除文件
     @RequestMapping(value = "delFile",method = RequestMethod.POST)
-    public ResponseVO deleteFile(HttpServletRequest request, String fileIds){
+    public ResponseVO deleteFile(HttpServletRequest request, HttpServletResponse response,
+                                 String fileIds){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        fileInfoService.deleteFile(userId,fileIds);
+        fileInfoService.deleteFile(request,response,userId,fileIds);
         return ResponseVO.getSuccessResponseVO(null);
     }
 }

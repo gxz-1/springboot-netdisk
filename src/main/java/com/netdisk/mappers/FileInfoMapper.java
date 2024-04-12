@@ -3,6 +3,7 @@ package com.netdisk.mappers;
 import com.netdisk.pojo.FileInfo;
 import com.netdisk.vo.FileInfoVo;
 
+import java.util.Date;
 import java.util.List;
 
 public interface FileInfoMapper {
@@ -20,8 +21,12 @@ public interface FileInfoMapper {
 
     FileInfo selectByUserIdAndFileId(String fileId, String userId,Integer folderType);
 
-    List<FileInfoVo> selectFoldersByFilePid(String filePid, String userId, String[] fileIdList);
+    List<FileInfoVo> selectFoldersByFilePid(String filePid, String userId);
 
-    void updateDelFlagByFileIdAndUserId(String fileId, String userId, Integer delFlag);
+    void updateDelFlagByFileIdAndUserId(String fileId, String userId, Integer delFlag, Date time);
+
+    List<FileInfoVo> selectDelFileList(String userId);
+
+    FileInfo selectDelFileByUserIdAndFileId(String fileId, String userId);
 }
 

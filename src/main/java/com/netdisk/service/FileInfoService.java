@@ -39,5 +39,5 @@ public interface FileInfoService {
 
     void downloadFile(HttpServletRequest request,HttpServletResponse response,String code, String userId);
 
-    void deleteFile(String userId, String fileIds);
+    void deleteFile(HttpServletRequest request,HttpServletResponse response,String userId, String fileIds);
 }
