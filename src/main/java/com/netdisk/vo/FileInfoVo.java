@@ -13,6 +13,7 @@ public class FileInfoVo {
     private String fileCover;
     private Date createTime;
     private Date lastUpdateTime;
+    private Date recoveryTime;
     private Integer folderType;
     private Integer fileCategory;
     private Integer fileType;
@@ -29,6 +30,7 @@ public class FileInfoVo {
         fileCover=info.getFileCover();
         createTime=info.getCreateTime();
         lastUpdateTime=info.getLastUpdateTime();
+        recoveryTime=info.getRecoveryTime();
         folderType=info.getFolderType();
         fileCategory=info.getFileCategory();
         fileType=info.getFileType();
