@@ -11,6 +11,7 @@ import com.netdisk.mappers.FileInfoMapper;
 import com.netdisk.mappers.UserInfoMapper;
 import com.netdisk.pojo.FileInfo;
 import com.netdisk.pojo.UserInfo;
+import com.netdisk.service.AsyncService;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.FileTools;
@@ -47,8 +48,7 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Autowired
     UserInfoMapper userInfoMapper;
     @Autowired
-    @Lazy// 避免循环依赖
-    FileInfoService fileInfoService;//需要fileInfoService调用transferFile()进行异步合并文件
+    AsyncService asyncService;
 
     @Value("${my.outFileFolder}")
     String outFileFolder;
@@ -166,12 +166,13 @@ public class FileInfoServiceImpl implements FileInfoService {
             userInfo.setUserId(userId);
             userInfo.setUseSpace(file.getSize() + useSpace);
             userInfoMapper.updateUserInfo(userInfo);
-            //TODO 异步操作：进行文件合并 @Lazy？
+            //异步进行文件转码合并
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                //在事务提交后再执行异步方法,确保数据库的一致性
                 @Override
-                //需要在事务提交后再进行
                 public void afterCommit() {
-                    fileInfoService.transferFile(info.getFileId(),info.getUserId());//由Spring管理，使用fileInfoService调用才能使异步生效
+                    //通过bean的引用来调用方法时，@Async注解才会生效
+                    asyncService.transferFile(info.getFileId(),info.getUserId());
                 }
             });
             //处理返回结果
@@ -182,71 +183,6 @@ public class FileInfoServiceImpl implements FileInfoService {
         }
     }
 
-    @Override
-    @Async
-    public void transferFile(String fileId,String userId) {
-        Boolean isSuccess = true;
-        String coverName = null;
-        FileTypeEnums typeEnums = null;
-        FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId,0);
-        if (fileInfo == null || fileInfo.getStatus() != 0) {
-            return;//没找到或者文件不在转码中,不处理
-        }
-        //临时目录
-        File tempDirPath = new File(outFileFolder + "/temp/" + userId + fileId);
-        File targetFile = new File(fileInfo.getFilePath());
-        if (!tempDirPath.exists()) {
-            return;//临时文件不存在了
-        }
-        //开始合并文件
-        try {
-            RandomAccessFile writeFile = new RandomAccessFile(targetFile, "rw");
-            byte[] b = new byte[1024 * 10];
-            for (int i = 0; i < tempDirPath.listFiles().length; ++i) {
-                int len = -1;
-                //创建读块文件的对象
-                File chunkFile = new File(tempDirPath.getPath() + File.separator + i);
-                RandomAccessFile readFile = new RandomAccessFile(chunkFile, "r");
-                while( (len = readFile.read(b)) != -1) {
-                    writeFile.write(b, 0, len);
-                }
-                readFile.close();
-            }
-            writeFile.close();
-            if (tempDirPath.exists()) {//删除临时文件
-                FileUtils.deleteDirectory(tempDirPath);
-            }
-        } catch (Exception e) {
-            isSuccess=false;
-            throw new BusinessException(ResponseCodeEnum.CODE_600);
-        }
-        //视频切割，生成缩略图
-        typeEnums=FileTypeEnums.getByType(fileInfo.getFileType());
-
-        if(typeEnums == FileTypeEnums.VIDEO){
-            //视频文件切割
-            FileTools.cutVideo(fileId,fileInfo.getFilePath());
-            //生成缩略图
-            coverName=userId+fileId+".png";
-            ScaleFilter.createCover4Video(new File(fileInfo.getFilePath()),150,new File(outFileFolder+"/file/"+coverName));
-        }else if(typeEnums == FileTypeEnums.IMAGE){//图片
-            coverName=userId+fileId+"_.png";//多加一个_区分缩略图和原图
-            Boolean ok = ScaleFilter.createThumbnailWidthFFmpeg(new File(fileInfo.getFilePath()), 150,
-                    new File(outFileFolder+"/file/"+coverName), false);
-            if(!ok){//压缩失败则复制原图，例如原图太小
-                try {
-                    FileUtils.copyFile(new File(fileInfo.getFilePath()),new File(outFileFolder+"/file/"+coverName));
-                } catch (IOException e) {
-                    throw new BusinessException(ResponseCodeEnum.CODE_600);
-                }
-            }
-        }
-        //设置文件大小
-        fileInfo.setFileSize(targetFile.length());
-        fileInfo.setFileCover(coverName);
-        fileInfo.setStatus(isSuccess?2:1);//2转码成功 1转码失败
-        fileInfoMapper.updateFileInfo(fileInfo); //TODO 可能存在写后写问题
-    }
 
     @Override
     public void getVideoInfo(HttpServletResponse response,String fileId,String userId) {
