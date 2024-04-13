@@ -1,13 +1,10 @@
 package com.netdisk.controller;
 
-import com.github.pagehelper.PageInfo;
 import com.netdisk.advice.BusinessException;
-import com.netdisk.enums.FileCategoryEnums;
 import com.netdisk.enums.ResponseCodeEnum;
-import com.netdisk.pojo.FileInfo;
 import com.netdisk.service.FileInfoService;
-import com.netdisk.service.impl.FileInfoServiceImpl;
 import com.netdisk.utils.CookieTools;
+import com.netdisk.utils.FileTools;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
 import com.netdisk.vo.PageFileInfoVo;
@@ -19,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.netdisk.utils.FileTools;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +28,41 @@ public class FileInfoController {
 
     @Autowired
     FileInfoService fileInfoService;
+
+    @RequestMapping(value = "updateUserAvatar",method = RequestMethod.POST)
+    public ResponseVO updateUserAvatar(HttpServletRequest request, MultipartFile avatar) {
+        String avatarFolder=outFileFolder+"/avatar/";//头像文件存储目录
+        File folder=new File(avatarFolder);
+        if(!folder.exists()){
+            // 使用mkdirs而不是mkdir以确保创建所有不存在的父目录
+            folder.mkdirs();
+        }
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        //没获取到userId
+        if (userId==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_803);
+        }
+        File avatarFile = new File(avatarFolder + userId + ".jpg");
+        try {
+            if(avatarFile.exists()){//存在则先删除
+                avatarFile.delete();
+            }
+            avatar.transferTo(avatarFile);//存储头像
+        } catch (Exception e) {
+            throw new BusinessException(ResponseCodeEnum.CODE_811);
+        }
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    //更新密码
+    @RequestMapping(value = "updatePassword",method = RequestMethod.POST)
+    public ResponseVO updatePassword(HttpServletRequest request,String password) {
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        fileInfoService.updatePassword(userId,password);
+        return ResponseVO.getSuccessResponseVO(null);
+    }
+
+
 
     @RequestMapping(value = "loadDataList",method = RequestMethod.POST)
     //获取文件列表
@@ -130,15 +162,16 @@ public class FileInfoController {
     }
 
     @RequestMapping("createDownloadUrl/{fileId}")
-    public ResponseVO createDownloadUrl(HttpServletRequest request, @PathVariable String fileId){
-        return ResponseVO.getSuccessResponseVO(fileId);// TODO 后续考虑对下载的code进行token加密
+    public ResponseVO createDownloadUrl(@PathVariable String fileId){
+        String downloadToken = fileInfoService.createDownloadToken(fileId);
+        return ResponseVO.getSuccessResponseVO(downloadToken);
     }
 
-    @RequestMapping("download/{code}")
+    @RequestMapping("download/{downloadToken}")
     public void download(HttpServletRequest request, HttpServletResponse response,
-                               @PathVariable String code){
+                               @PathVariable String downloadToken){
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        fileInfoService.downloadFile(request,response,code,userId);
+        fileInfoService.downloadFile(request,response,downloadToken,userId);
     }
 
     //批量删除文件

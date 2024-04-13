@@ -3,14 +3,16 @@ package com.netdisk.advice;
 import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.enums.VerifyRegexEnum;
 import com.netdisk.utils.CookieTools;
+import com.netdisk.utils.JwtHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.servlet.mvc.condition.RequestConditionHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -21,6 +23,9 @@ import java.util.regex.Pattern;
 @Component//放入ioc容器
 @Aspect//设置为切面
 public class ValidationAspect {
+
+    @Autowired
+    private JwtHelper jwtHelper;
 
     @Before("execution(* com.netdisk.controller.AccountController.*(..))")//对controller包中AccountController类的所有参数
     private void ValidateParam(JoinPoint point){
@@ -54,11 +59,23 @@ public class ValidationAspect {
         }
     }
 
-    //TODO 校验登录 待实现
+    //校验登录
+    @Before("execution(* com.netdisk.controller.FileInfoController.*(..))" +
+            "||execution(* com.netdisk.controller.RecycleController.*(..))")//对controller包中AccountController类的所有参数
     private void checkLogin(){
         //拿到request对象
-//        HttpServletRequest request= (HttpServletRequest) RequestContextHolder.getRequestAttributes();
-//        CookieTools.getCookieValue(request,)
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attrs.getRequest();
+        String token = CookieTools.getCookieValue(request, null, "token", false);
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        //判断token是否过期
+        if(jwtHelper.isExpiration(token)){
+            throw new BusinessException(ResponseCodeEnum.CODE_901);
+        }
+        //判断token与userId是否一致
+        if(userId==null || !userId.equals(jwtHelper.getUserId(token)) ){
+            throw new BusinessException(ResponseCodeEnum.CODE_500);
+        }
     }
 
     //正则匹配校验,在VerifyRegexEnum中定义了正则校验的规则

@@ -1,6 +1,7 @@
 package com.netdisk.service;
 
 import com.netdisk.vo.UserLoginVo;
+import jakarta.servlet.http.HttpServletResponse;
 
 public interface AccountService {
     void sendEmailCode(String email, Integer type);
@@ -9,7 +10,7 @@ public interface AccountService {
 
     void register(String email, String nickName, String password);
 
-    UserLoginVo login(String email, String password);
+    UserLoginVo login(HttpServletResponse response, String email, String password);
 
     void resetPwd(String email, String password);
 }

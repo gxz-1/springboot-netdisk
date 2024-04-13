@@ -108,12 +108,7 @@ public class AccountController {
             throw new BusinessException(ResponseCodeEnum.CODE_802);
         }
         //登录
-        UserLoginVo userLoginVo = accountService.login(email,password);
-        //添加到cookie并返回
-        CookieTools.addCookie(response,"nickName",userLoginVo.getNickName(),"/",true,-1);
-        CookieTools.addCookie(response,"userId",userLoginVo.getUserId(),"/",true,-1);
-        CookieTools.addCookie(response,"totalSpace", String.valueOf(userLoginVo.getTotalSpace()),"/",true,-1);
-        CookieTools.addCookie(response,"useSpace", String.valueOf(userLoginVo.getUseSpace()),"/",true,-1);
+        UserLoginVo userLoginVo = accountService.login(response,email,password);
         return ResponseVO.getSuccessResponseVO(userLoginVo);
     }
 
@@ -174,53 +169,5 @@ public class AccountController {
         CookieTools.clearCookie(request,response);
         return ResponseVO.getSuccessResponseVO(null);
     }
-
-    @RequestMapping(value = "updateUserAvatar",method = RequestMethod.POST)
-    public ResponseVO updateUserAvatar(HttpServletRequest request, MultipartFile avatar) {
-        String avatarFolder=outFileFolder+"/avatar/";//头像文件存储目录
-        File folder=new File(avatarFolder);
-        if(!folder.exists()){
-            // 使用mkdirs而不是mkdir以确保创建所有不存在的父目录
-            folder.mkdirs();
-        }
-        String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        //没获取到userId
-        if (userId==null){
-            throw new BusinessException(ResponseCodeEnum.CODE_803);
-        }
-        File avatarFile = new File(avatarFolder + userId + ".jpg");
-        try {
-            if(avatarFile.exists()){//存在则先删除
-                avatarFile.delete();
-            }
-            avatar.transferTo(avatarFile);//存储头像
-        } catch (Exception e) {
-            throw new BusinessException(ResponseCodeEnum.CODE_811);
-        }
-        //TODO 上传头像后覆盖qq头像  暂时没用到
-//        UserInfo userInfo = new UserInfo();
-//        userInfo.setUserId(userId);
-//        userInfo.setQqAvatar("");
-//        userInfoMapper.updateUserInfo(userInfo);
-        return ResponseVO.getSuccessResponseVO(null);
-    }
-
-    //更新密码 TODO 这个接口感觉很危险，可以直接修改密码,暂时不开启
-//    @RequestMapping(value = "updatePassword",method = RequestMethod.POST)
-    public ResponseVO updatePassword(HttpServletRequest request,String password) {
-        String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        //没获取到userId
-        if (userId==null){
-            throw new BusinessException(ResponseCodeEnum.CODE_803);
-        }
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUserId(userId);
-        userInfo.setPassword(StringTools.encodeByMD5(password));
-        userInfoMapper.updateUserInfo(userInfo);
-        return ResponseVO.getSuccessResponseVO(null);
-    }
-
-
-
 
 }

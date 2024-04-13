@@ -15,17 +15,14 @@ import com.netdisk.service.AsyncService;
 import com.netdisk.service.FileInfoService;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.FileTools;
-import com.netdisk.utils.ScaleFilter;
+import com.netdisk.utils.JwtHelper;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.FileInfoVo;
 import com.netdisk.vo.PageFileInfoVo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -34,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
@@ -50,8 +46,20 @@ public class FileInfoServiceImpl implements FileInfoService {
     @Autowired
     AsyncService asyncService;
 
+    @Autowired
+    private JwtHelper jwtHelper;
+
     @Value("${my.outFileFolder}")
     String outFileFolder;
+
+    @Override
+    public void updatePassword(String userId, String password) {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserId(userId);
+        userInfo.setPassword(StringTools.encodeByMD5(password));
+        userInfoMapper.updateUserInfo(userInfo);
+    }
+
     //分页展示分类的文件
     @Override
     public PageFileInfoVo selectPageFileInfo(Integer pageNo, Integer pageSize,
@@ -263,8 +271,7 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     public List<FileInfoVo> loadAllFolder(String userId, String filePid, String currentFileIds) {
-        List<FileInfoVo> info = fileInfoMapper.selectFoldersByFilePid(filePid,userId);
-        return info;
+        return fileInfoMapper.selectFoldersByFilePid(filePid,userId);
     }
 
     @Override
@@ -291,13 +298,24 @@ public class FileInfoServiceImpl implements FileInfoService {
     }
 
     @Override
-    public void downloadFile(HttpServletRequest request,HttpServletResponse response,String code, String userId) {
-        String fileId=code;
+    public String createDownloadToken(String fileId) {
+        //创建2分钟有效的downloadToken
+        return jwtHelper.createTokenWithTime(fileId, 2L);
+    }
+
+    @Override
+    public void downloadFile(HttpServletRequest request,HttpServletResponse response,String downloadToken, String userId) {
+        //校验downloadToken是否有效
+        if(jwtHelper.isExpiration(downloadToken)){
+            throw new BusinessException(ResponseCodeEnum.CODE_902);
+        }
+        String fileId=jwtHelper.getFileId(downloadToken);
         //校验文件是否存在
         FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, 0);
         if(info==null){
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
+        //创建下载链接
         response.setContentType("application/x-msdownload; charset=UTF-8");
         String fileName=info.getFileName();
         try {

@@ -30,7 +30,6 @@ public class AsyncServiceImpl implements AsyncService {
     @Override
     @Async
     public void transferFile(String fileId, String userId) {
-        Boolean isSuccess = true;
         String coverName = null;
         FileTypeEnums typeEnums = null;
         FileInfo fileInfo = fileInfoMapper.selectByUserIdAndFileId(fileId, userId,0);
@@ -62,14 +61,11 @@ public class AsyncServiceImpl implements AsyncService {
                 FileUtils.deleteDirectory(tempDirPath);
             }
         } catch (Exception e) {
-            isSuccess=false;
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
         //视频切割，生成缩略图
         typeEnums=FileTypeEnums.getByType(fileInfo.getFileType());
-
-        if(typeEnums == FileTypeEnums.VIDEO){
-            //视频文件切割
+        if(typeEnums == FileTypeEnums.VIDEO){//视频文件切割
             FileTools.cutVideo(fileId,fileInfo.getFilePath());
             //生成缩略图
             coverName=userId+fileId+".png";
@@ -87,10 +83,11 @@ public class AsyncServiceImpl implements AsyncService {
             }
         }
         //设置文件大小
-        fileInfo.setFileSize(targetFile.length());
-        fileInfo.setFileCover(coverName);
-        fileInfo.setStatus(isSuccess?2:1);//2转码成功 1转码失败
-        fileInfoMapper.updateFileInfo(fileInfo); //TODO 可能存在写后写问题
+        FileInfo info = new FileInfo();
+        info.setFileSize(targetFile.length());
+        info.setFileCover(coverName);
+        info.setStatus(2);//2转码成功 1转码失败
+        fileInfoMapper.updateFileInfo(info);
     }
 
 }

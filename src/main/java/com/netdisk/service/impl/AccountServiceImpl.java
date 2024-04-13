@@ -8,10 +8,13 @@ import com.netdisk.mappers.UserInfoMapper;
 import com.netdisk.pojo.EmailCode;
 import com.netdisk.pojo.UserInfo;
 import com.netdisk.service.AccountService;
+import com.netdisk.utils.CookieTools;
+import com.netdisk.utils.JwtHelper;
 import com.netdisk.utils.StringTools;
 import com.netdisk.vo.UserLoginVo;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -33,6 +36,9 @@ public class AccountServiceImpl implements AccountService {
     private UserInfoMapper userInfoMapper;
     @Autowired
     private FileInfoMapper fileInfoMapper;
+
+    @Autowired
+    private JwtHelper jwtHelper;
     @Autowired
     private JavaMailSender mailSender;//spring提供的邮箱操作对象
 
@@ -56,7 +62,7 @@ public class AccountServiceImpl implements AccountService {
         //1.生成长度为5的随机数
         String code= StringTools.getRandomNumber(5);
         //2.每次发送前需要重置之前存储的验证码
-        emailCodeMapper.disableEmailCode(email);//TODO 这里是逻辑删除，后续考虑定期清理数据库
+        emailCodeMapper.disableEmailCode(email);
         //3.存储验证码到EmailCode表中
         EmailCode emailCode=new EmailCode();
         emailCode.setEmail(email);
@@ -94,7 +100,7 @@ public class AccountServiceImpl implements AccountService {
             throw new BusinessException(ResponseCodeEnum.CODE_807);
         }
         //使之前的验证码失效
-        emailCodeMapper.disableEmailCode(email);//TODO 这里是逻辑删除，后续考虑定期清理数据库
+        emailCodeMapper.disableEmailCode(email);
     }
 
     //注册用户
@@ -117,7 +123,7 @@ public class AccountServiceImpl implements AccountService {
 
     //用户登录
     @Override
-    public UserLoginVo login(String email, String password) {
+    public UserLoginVo login(HttpServletResponse response, String email, String password) {
         //校验密码和用户状态status
         UserInfo userInfo = userInfoMapper.selectByEmail(email);
         if(userInfo==null || !userInfo.getPassword().equals(password)){//前端已将密码加密
@@ -131,6 +137,14 @@ public class AccountServiceImpl implements AccountService {
         //更新用户空间
         userInfo.setUseSpace(fileInfoMapper.selectUseSpace(userInfo.getUserId()));
         userInfoMapper.updateUserInfo(userInfo);
+        //设置token
+        String token = jwtHelper.createToken(userInfo.getUserId());
+        //添加到cookie并返回
+        //CookieTools.addCookie(response,"nickName",userInfo.getNickName(),"/",true,-1);
+        CookieTools.addCookie(response,"token",token,"/",true,-1);
+        CookieTools.addCookie(response,"userId",userInfo.getUserId(),"/",true,-1);
+        CookieTools.addCookie(response,"totalSpace", String.valueOf(userInfo.getTotalSpace()),"/",true,-1);
+        CookieTools.addCookie(response,"useSpace", String.valueOf(userInfo.getUseSpace()),"/",true,-1);
         //设置返回vo
         return new UserLoginVo(userInfo);
     }

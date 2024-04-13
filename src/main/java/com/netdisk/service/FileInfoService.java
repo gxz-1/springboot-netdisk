@@ -1,7 +1,5 @@
 package com.netdisk.service;
 
-import com.github.pagehelper.PageInfo;
-import com.netdisk.pojo.FileInfo;
 import com.netdisk.vo.FileInfoVo;
 import com.netdisk.vo.PageFileInfoVo;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 
 public interface FileInfoService {
+    void updatePassword(String userId, String password);
+
     PageFileInfoVo selectPageFileInfo(Integer pageNo, Integer pageSize,
                                       String category, String userId, String filePid);
 
@@ -33,7 +33,11 @@ public interface FileInfoService {
 
     void changeFileFolder(String fileIds, String userId, String filePid);
 
-    void downloadFile(HttpServletRequest request,HttpServletResponse response,String code, String userId);
+    String createDownloadToken(String fileId);
+
+    void downloadFile(HttpServletRequest request,HttpServletResponse response,String downloadToken, String userId);
 
     void deleteFile(HttpServletRequest request,HttpServletResponse response,String userId, String fileIds);
+
+
 }
