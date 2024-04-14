@@ -4,6 +4,26 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.netdisk.mappers.FileShareMapper">
+    <insert id="insertFileShare">
+        insert into file_share (share_id,file_id,user_id,share_time,expire_time,code)
+        values(#{shareId},#{fileId},#{userId},#{shareTime},#{expireTime},#{code})
+
+    </insert>
+
+    <delete id="deleteFileShareBatch">
+        delete from file_share where user_id = #{userId}
+        and share_id in(<foreach collection="shareIdArray" separator="," item="item">#{item}</foreach>)
+    </delete>
+
+    <select id="selectPageByUserId" resultType="com.netdisk.vo.FileShareVo">
+        select fs.share_id,fs.file_id,fs.user_id,fs.share_time,fs.expire_time,fs.code,fs.show_count,
+        fi.file_name,fi.folder_type,fi.file_category,fi.file_type,fi.file_cover
+        from file_share fs
+        join file_info fi on fs.file_id=fi.file_id
+        where user_id = #{user_id}
+        and fi.status=2 and fi.del_flag=2
+        order by fs.share_time desc
+    </select>
 
     <select id="getShareInfoByShareId" resultType="com.netdisk.vo.ShareInfoVo">
         select fs.file_id,fs.user_id,fs.share_time,fs.expire_time,
@@ -13,11 +33,13 @@
         join file_info fi on fs.file_id=fi.file_id
         where share_id = #{share_id}
         and ui.status=0 and fi.status=2 and fi.del_flag=2
+        order by fs.share_time desc
     </select>
 
     <select id="selectByShareId" resultType="com.netdisk.pojo.FileShare">
         select * from file_share where share_id=#{share_id}
     </select>
+
 
     <update id="updateShowCountByShareId">
         update file_share

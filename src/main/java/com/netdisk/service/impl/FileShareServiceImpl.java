@@ -5,6 +5,7 @@ import com.github.pagehelper.PageInfo;
 import com.netdisk.advice.BusinessException;
 import com.netdisk.enums.FileCategoryEnums;
 import com.netdisk.enums.ResponseCodeEnum;
+import com.netdisk.enums.ShareValidTypeEnums;
 import com.netdisk.mappers.FileInfoMapper;
 import com.netdisk.mappers.FileShareMapper;
 import com.netdisk.pojo.FileInfo;
@@ -13,10 +14,7 @@ import com.netdisk.service.FileShareService;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.JwtHelper;
 import com.netdisk.utils.StringTools;
-import com.netdisk.vo.FileInfoVo;
-import com.netdisk.vo.PageFileInfoVo;
-import com.netdisk.vo.ResponseVO;
-import com.netdisk.vo.ShareInfoVo;
+import com.netdisk.vo.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -40,6 +39,53 @@ public class FileShareServiceImpl implements FileShareService {
     @Autowired
     FileInfoMapper fileInfoMapper;
 
+    @Override
+    public FileShare saveShare(String userId, String fileId, Integer validType, String code) {
+        FileShare share = new FileShare();
+        share.setUserId(userId);
+        share.setFileId(fileId);
+        share.setShareTime(new Date());
+        //设置shareId
+        share.setShareId(StringTools.getRandomString(20));
+        //设置过期时间
+        ShareValidTypeEnums typeEnum = ShareValidTypeEnums.getByType(validType);
+        if (typeEnum == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        if (typeEnum != ShareValidTypeEnums.FOREVER) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, typeEnum.getDays());
+            share.setExpireTime(calendar.getTime());
+        }
+        //设置分享码
+        if (StringTools.isEmpty(code)) {
+            share.setCode(StringTools.getRandomString(5));
+        }else{
+            share.setCode(code);
+        }
+        //插入数据
+        this.fileShareMapper.insertFileShare(share);
+        return share;
+    }
+
+    //获取已分享的文件列表
+    @Override
+    public PageFileInfoVo findListByPage(Integer pageNo, Integer pageSize, String userId) {
+        PageHelper.startPage(pageNo, pageSize);
+        List<FileShareVo> shareInfoVoList = fileShareMapper.selectPageByUserId();
+        PageInfo<FileShareVo> pageInfo = new PageInfo<>(shareInfoVoList);
+        return new PageFileInfoVo(pageInfo.getTotal(),pageInfo.getPageSize(),pageInfo.getPageNum(),pageInfo.getPages(),pageInfo.getList());
+    }
+
+    @Override
+    public void deleteFileShareBatch(String[] shareIdArray, String userId) {
+        Integer count = this.fileShareMapper.deleteFileShareBatch(shareIdArray, userId);
+        if (count != shareIdArray.length) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+    }
+
+    //外部获取分享的信息
     @Override
     public ShareInfoVo getShareInfoVo(HttpServletRequest request,String shareId) {
         ShareInfoVo vo = fileShareMapper.getShareInfoByShareId(shareId);
