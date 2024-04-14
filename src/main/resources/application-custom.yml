@@ -16,7 +16,7 @@ my:
 jwt:
   token:
     tokenExpiration: 120 #有效时间min
-    tokenSignKey: headline123465 #自定义的签名密钥
+    tokenSignKey: netdisk123465 #自定义的签名密钥
 
 #  #超级管理员id
 #admin.emails=test@qq.com

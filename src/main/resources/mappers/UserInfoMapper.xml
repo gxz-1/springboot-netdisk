@@ -19,8 +19,6 @@
             <if test="userId != null">user_id,</if>
             <if test="nickName != null">nick_name,</if>
             <if test="email != null">email,</if>
-            <if test="qqOpenId != null">qq_open_id,</if>
-            <if test="qqAvatar != null">qq_avatar,</if>
             <if test="password != null">password,</if>
             <if test="joinTime != null">join_time,</if>
             <if test="lastLoginTime != null">last_login_time,</if>
@@ -32,8 +30,6 @@
             <if test="userId != null">#{userId},</if>
             <if test="nickName != null">#{nickName},</if>
             <if test="email != null">#{email},</if>
-            <if test="qqOpenId != null">#{qqOpenId},</if>
-            <if test="qqAvatar != null">#{qqAvatar},</if>
             <if test="password != null">#{password},</if>
             <if test="joinTime != null">#{joinTime},</if>
             <if test="lastLoginTime != null">#{lastLoginTime},</if>
@@ -48,8 +44,6 @@
         <set>
             <if test="nickName != null">nick_name = #{nickName},</if>
             <if test="email != null">email = #{email},</if>
-            <if test="qqOpenId != null">qq_open_id = #{qqOpenId},</if>
-            <if test="qqAvatar != null">qq_avatar = #{qqAvatar},</if>
             <if test="password != null">password = #{password},</if>
             <if test="joinTime != null">join_time = #{joinTime},</if>
             <if test="lastLoginTime != null">last_login_time = #{lastLoginTime},</if>

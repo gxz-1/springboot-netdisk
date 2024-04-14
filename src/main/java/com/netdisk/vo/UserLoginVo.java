@@ -17,7 +17,6 @@ public class UserLoginVo {
         this.nickName=userInfo.getNickName();
         this.userId=userInfo.getUserId();
         this.admin=false;//TODO: 暂时不处理管理员相关逻辑
-        this.avatar=null;//TODO: 后续设置
         this.useSpace= userInfo.getUseSpace();
         this.totalSpace= userInfo.getTotalSpace();
     }

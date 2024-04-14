@@ -28,11 +28,11 @@ public class JwtHelper {
     }
 
     //生成有效期expirationTime分钟的token字符串
-    public String createTokenWithTime(String str,Long expirationTime) {
+    public String createTokenWithTime(String key,String value,Long expirationTime) {
         String token = Jwts.builder()
                 .setSubject("YYGH-USER")
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime*1000*60)) //单位分钟
-                .claim("fileId", str)
+                .claim(key,value)
                 .signWith(SignatureAlgorithm.HS512, tokenSignKey)
                 .compressWith(CompressionCodecs.GZIP)
                 .compact();

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.netdisk.mappers.FileShareMapper">
+
+    <select id="getShareInfoByShareId" resultType="com.netdisk.vo.ShareInfoVo">
+        select fs.file_id,fs.user_id,fs.share_time,fs.expire_time,
+        ui.nick_name,fi.file_name
+        from file_share fs
+        join user_info ui on fs.user_id=ui.user_id
+        join file_info fi on fs.file_id=fi.file_id
+        where share_id = #{share_id}
+        and ui.status=0 and fi.status=2 and fi.del_flag=2
+    </select>
+
+    <select id="selectByShareId" resultType="com.netdisk.pojo.FileShare">
+        select * from file_share where share_id=#{share_id}
+    </select>
+
+    <update id="updateShowCountByShareId">
+        update file_share
+        set show_count=show_count+1
+        where share_id=#{share_id}
+    </update>
+</mapper>

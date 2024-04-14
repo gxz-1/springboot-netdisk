@@ -299,8 +299,8 @@ public class FileInfoServiceImpl implements FileInfoService {
 
     @Override
     public String createDownloadToken(String fileId) {
-        //创建2分钟有效的downloadToken
-        return jwtHelper.createTokenWithTime(fileId, 2L);
+        //创建5分钟有效的downloadToken
+        return jwtHelper.createTokenWithTime("fileId",fileId, 5L);
     }
 
     @Override
