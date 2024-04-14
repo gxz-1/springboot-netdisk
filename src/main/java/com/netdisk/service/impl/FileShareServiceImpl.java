@@ -57,6 +57,7 @@ public class FileShareServiceImpl implements FileShareService {
             calendar.add(Calendar.DAY_OF_YEAR, typeEnum.getDays());
             share.setExpireTime(calendar.getTime());
         }
+        share.setValidType(validType);
         //设置分享码
         if (StringTools.isEmpty(code)) {
             share.setCode(StringTools.getRandomString(5));
@@ -72,7 +73,7 @@ public class FileShareServiceImpl implements FileShareService {
     @Override
     public PageFileInfoVo findListByPage(Integer pageNo, Integer pageSize, String userId) {
         PageHelper.startPage(pageNo, pageSize);
-        List<FileShareVo> shareInfoVoList = fileShareMapper.selectPageByUserId();
+        List<FileShareVo> shareInfoVoList = fileShareMapper.selectPageByUserId(userId);
         PageInfo<FileShareVo> pageInfo = new PageInfo<>(shareInfoVoList);
         return new PageFileInfoVo(pageInfo.getTotal(),pageInfo.getPageSize(),pageInfo.getPageNum(),pageInfo.getPages(),pageInfo.getList());
     }
@@ -95,6 +96,9 @@ public class FileShareServiceImpl implements FileShareService {
         }
         //判断是否是当前用户分享的文件
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        if(userId==null){
+            return vo;
+        }
         if(userId.equals(vo.getUserId())){
             vo.setCurrentUser(true);//展示“取消分享”按钮
         }else {

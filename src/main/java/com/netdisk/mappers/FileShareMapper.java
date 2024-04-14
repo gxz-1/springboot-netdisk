@@ -7,7 +7,7 @@ import com.netdisk.vo.ShareInfoVo;
 import java.util.List;
 
 public interface FileShareMapper {
-    List<FileShareVo> selectPageByUserId();
+    List<FileShareVo> selectPageByUserId(String userId);
 
     ShareInfoVo getShareInfoByShareId(String shareId);
 

@@ -5,9 +5,8 @@
 
 <mapper namespace="com.netdisk.mappers.FileShareMapper">
     <insert id="insertFileShare">
-        insert into file_share (share_id,file_id,user_id,share_time,expire_time,code)
-        values(#{shareId},#{fileId},#{userId},#{shareTime},#{expireTime},#{code})
-
+        insert into file_share (share_id,file_id,user_id,share_time,expire_time,code,valid_type)
+        values(#{shareId},#{fileId},#{userId},#{shareTime},#{expireTime},#{code},#{validType})
     </insert>
 
     <delete id="deleteFileShareBatch">
@@ -20,7 +19,7 @@
         fi.file_name,fi.folder_type,fi.file_category,fi.file_type,fi.file_cover
         from file_share fs
         join file_info fi on fs.file_id=fi.file_id
-        where user_id = #{user_id}
+        where fs.user_id = #{user_id}
         and fi.status=2 and fi.del_flag=2
         order by fs.share_time desc
     </select>
@@ -31,7 +30,7 @@
         from file_share fs
         join user_info ui on fs.user_id=ui.user_id
         join file_info fi on fs.file_id=fi.file_id
-        where share_id = #{share_id}
+        where fs.share_id = #{share_id}
         and ui.status=0 and fi.status=2 and fi.del_flag=2
         order by fs.share_time desc
     </select>
