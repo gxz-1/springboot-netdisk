@@ -2,8 +2,10 @@ package com.netdisk.advice;
 
 import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.enums.VerifyRegexEnum;
+import com.netdisk.pojo.FileShare;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.utils.JwtHelper;
+import com.netdisk.utils.StringTools;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
@@ -16,6 +18,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,7 +65,7 @@ public class ValidationAspect {
     //校验登录
     @Before("execution(* com.netdisk.controller.FileInfoController.*(..))" +
             "||execution(* com.netdisk.controller.RecycleController.*(..))"+
-            "||execution(* com.netdisk.controller.ShareController.*(..))")//对controller包中AccountController类的所有参数
+            "||execution(* com.netdisk.controller.ShareController.*(..))")
     private void checkLogin(){
         //拿到request对象
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();

@@ -28,11 +28,12 @@ public class JwtHelper {
     }
 
     //生成有效期expirationTime分钟的token字符串
-    public String createTokenWithTime(String key,String value,Long expirationTime) {
+    public String createTokenWithTime(String key1,String value1,String key2,String value2,Long expirationTime) {
         String token = Jwts.builder()
                 .setSubject("YYGH-USER")
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime*1000*60)) //单位分钟
-                .claim(key,value)
+                .claim(key1,value2)
+                .claim(key2,value2)
                 .signWith(SignatureAlgorithm.HS512, tokenSignKey)
                 .compressWith(CompressionCodecs.GZIP)
                 .compact();
@@ -40,12 +41,11 @@ public class JwtHelper {
     }
 
     //从token字符串获取fileId
-    public  String getFileId(String token) {
+    public  String getkey(String token,String key) {
         if(StringTools.isEmpty(token)) return null;
         Jws<Claims> claimsJws = Jwts.parser().setSigningKey(tokenSignKey).parseClaimsJws(token);
         Claims claims = claimsJws.getBody();
-        String userId = claims.get("fileId").toString();
-        return userId;
+        return claims.get(key).toString();
     }
 
     //从token字符串获取userId

@@ -162,16 +162,16 @@ public class FileInfoController {
     }
 
     @RequestMapping("createDownloadUrl/{fileId}")
-    public ResponseVO createDownloadUrl(@PathVariable String fileId){
-        String downloadToken = fileInfoService.createDownloadToken(fileId);
+    public ResponseVO createDownloadUrl(HttpServletRequest request,@PathVariable String fileId){
+        String userId = CookieTools.getCookieValue(request, null, "userId", false);
+        String downloadToken = fileInfoService.createDownloadToken(fileId,userId);
         return ResponseVO.getSuccessResponseVO(downloadToken);
     }
 
     @RequestMapping("download/{downloadToken}")
     public void download(HttpServletRequest request, HttpServletResponse response,
                                @PathVariable String downloadToken){
-        String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        fileInfoService.downloadFile(request,response,downloadToken,userId);
+        fileInfoService.downloadFile(request,response,downloadToken);
     }
 
     //批量删除文件

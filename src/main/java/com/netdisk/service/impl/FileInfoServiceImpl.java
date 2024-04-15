@@ -298,26 +298,27 @@ public class FileInfoServiceImpl implements FileInfoService {
     }
 
     @Override
-    public String createDownloadToken(String fileId) {
-        //创建5分钟有效的downloadToken
-        return jwtHelper.createTokenWithTime("fileId",fileId, 5L);
-    }
-
-    @Override
-    public void downloadFile(HttpServletRequest request,HttpServletResponse response,String downloadToken, String userId) {
-        //校验downloadToken是否有效
-        if(jwtHelper.isExpiration(downloadToken)){
-            throw new BusinessException(ResponseCodeEnum.CODE_902);
-        }
-        String fileId=jwtHelper.getFileId(downloadToken);
+    public String createDownloadToken(String fileId, String userId) {
         //校验文件是否存在
         FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, 0);
         if(info==null){
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
+        //创建5分钟有效的downloadToken
+        return jwtHelper.createTokenWithTime("name",info.getFileName(),"path",info.getFilePath(), 5L);
+    }
+
+    @Override
+    public void downloadFile(HttpServletRequest request, HttpServletResponse response, String downloadToken) {
+        //校验downloadToken是否有效
+        if(jwtHelper.isExpiration(downloadToken)){
+            throw new BusinessException(ResponseCodeEnum.CODE_902);
+        }
+        String fileName=jwtHelper.getkey(downloadToken,"name");
+        String filePath=jwtHelper.getkey(downloadToken,"path");
+
         //创建下载链接
         response.setContentType("application/x-msdownload; charset=UTF-8");
-        String fileName=info.getFileName();
         try {
             if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0) {//IE浏览器
                     fileName = URLEncoder.encode(fileName, "UTF-8");
@@ -328,7 +329,7 @@ public class FileInfoServiceImpl implements FileInfoService {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
         response.setHeader("Content-Disposition", "attachment;filename=\"" + fileName + "\"");
-        FileTools.readFile(response, info.getFilePath());
+        FileTools.readFile(response, filePath);
     }
 
     //删除批量文件
@@ -351,8 +352,8 @@ public class FileInfoServiceImpl implements FileInfoService {
             if(info.getFolderType()==1){
                 fileInfoMapper.updateDelFlagByFileIdAndUserId(info.getFileId(), userId, 0,new Date());
                 //如果删除的是目录，将下面的所有文件加入queue
-                for (FileInfoVo vo: fileInfoMapper.selectByUserIdAndCategory(null, userId, info.getFileId())){
-                    queue.offer(vo.getFileId());
+                for (FileInfo fileInfo: fileInfoMapper.selectListByUserIdAndFilePid( userId, info.getFileId())){
+                    queue.offer(fileInfo.getFileId());
                 }
             }else {
                 fileInfoMapper.updateDelFlagByFileIdAndUserId(info.getFileId(), userId, 1,new Date());

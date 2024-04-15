@@ -139,4 +139,8 @@
         select * from file_info
         where user_id= #{userId} and file_id=#{fileId} and del_flag=1
     </select>
+    <select id="selectListByUserIdAndFilePid" resultType="com.netdisk.pojo.FileInfo">
+        select * from file_info
+        where user_id = #{userId} and file_pid=#{filePid} and del_flag = 2
+    </select>
 </mapper>

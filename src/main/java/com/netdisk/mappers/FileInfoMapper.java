@@ -9,6 +9,8 @@ import java.util.List;
 public interface FileInfoMapper {
     List<FileInfoVo> selectByUserIdAndCategory(Integer category, String userId,String filePid);
 
+    List<FileInfo> selectListByUserIdAndFilePid(String userId, String filePid);
+
     Long selectUseSpace(String userId);
 
     FileInfo selectOneByMD5(String fileMd5);

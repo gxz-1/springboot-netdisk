@@ -5,7 +5,6 @@ import com.netdisk.service.FileShareService;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.vo.PageFileInfoVo;
 import com.netdisk.vo.ResponseVO;
-import com.netdisk.vo.ShareInfoVo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,9 +21,9 @@ public class ShareController {
 
     //创建分享链接
     @RequestMapping("shareFile")
-    public ResponseVO shareFile(HttpServletRequest request,String fileId,Integer validType, String code) {
+    public ResponseVO createShareFile(HttpServletRequest request,String fileId,Integer validType, String code) {
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        FileShare share=fileShareService.saveShare(userId,fileId,validType,code);
+        FileShare share=fileShareService.createShare(userId,fileId,validType,code);
         return ResponseVO.getSuccessResponseVO(share);
     }
 

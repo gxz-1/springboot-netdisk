@@ -33,11 +33,11 @@ public interface FileInfoService {
 
     void changeFileFolder(String fileIds, String userId, String filePid);
 
-    String createDownloadToken(String fileId);
+    String createDownloadToken(String fileId, String userId);
 
-    void downloadFile(HttpServletRequest request,HttpServletResponse response,String downloadToken, String userId);
+    void downloadFile(HttpServletRequest request, HttpServletResponse response, String downloadToken);
 
-    void deleteFile(HttpServletRequest request,HttpServletResponse response,String userId, String fileIds);
+    void deleteFile(HttpServletRequest request, HttpServletResponse response, String userId, String fileIds);
 
 
 }
