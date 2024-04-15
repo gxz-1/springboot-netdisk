@@ -61,14 +61,20 @@ public class ValidationAspect {
 
     //校验登录
     @Before("execution(* com.netdisk.controller.FileInfoController.*(..))" +
-            "||execution(* com.netdisk.controller.RecycleController.*(..))")//对controller包中AccountController类的所有参数
+            "||execution(* com.netdisk.controller.RecycleController.*(..))"+
+            "||execution(* com.netdisk.controller.ShareController.*(..))")//对controller包中AccountController类的所有参数
     private void checkLogin(){
         //拿到request对象
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs.getRequest();
+        //对获取缩略图接口放行，分享时需要调用
+        String url = request.getRequestURL().toString();
+        if (url.contains("netdisk/api/file/getImage/")){
+            return;
+        }
+        //判断token是否过期
         String token = CookieTools.getCookieValue(request, null, "token", false);
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        //判断token是否过期
         if(jwtHelper.isExpiration(token)){
             throw new BusinessException(ResponseCodeEnum.CODE_901);
         }

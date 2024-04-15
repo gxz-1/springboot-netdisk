@@ -1,5 +1,7 @@
 package com.netdisk.controller;
 
+import com.netdisk.advice.BusinessException;
+import com.netdisk.enums.ResponseCodeEnum;
 import com.netdisk.service.FileShareService;
 import com.netdisk.utils.CookieTools;
 import com.netdisk.vo.FileInfoVo;
@@ -23,9 +25,21 @@ public class WebShareController {
     @Autowired
     FileShareService fileShareService;
 
-    //校验提取码界面的分享文件的信息
+    //分享文件的基本信息（检验提取码前）
     @RequestMapping("getShareInfo")
     public ResponseVO getShareInfo(HttpServletRequest request,String shareId){
+        ShareInfoVo vo=fileShareService.getShareInfoVo(request,shareId);
+        return ResponseVO.getSuccessResponseVO(vo);
+    }
+
+    //分享文件的基本信息（检验提取码后）
+    @RequestMapping("getShareLoginInfo")
+    public ResponseVO getShareLoginInfo(HttpServletRequest request,String shareId){
+        String code = CookieTools.getCookieValue(request, null, "code", false);
+        if(code==null){
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        fileShareService.checkShareCode(shareId,code);
         ShareInfoVo vo=fileShareService.getShareInfoVo(request,shareId);
         return ResponseVO.getSuccessResponseVO(vo);
     }
@@ -33,24 +47,16 @@ public class WebShareController {
     //校验提取码
     @RequestMapping("checkShareCode")
     public ResponseVO checkShareCode(HttpServletResponse response, String shareId, String code){
-        fileShareService.checkShareCode(response,shareId,code);
+        fileShareService.checkShareCode(shareId,code);
+        CookieTools.addCookie(response,"code",code,"/",true,-1);
         return ResponseVO.getSuccessResponseVO(null);
     }
 
-    //分享界面的文件信息
-    @RequestMapping("getShareLoginInfo")
-    public ResponseVO getShareLoginInfo(HttpServletRequest request, String shareId){
-        ShareInfoVo vo=fileShareService.getShareInfoVo(request,shareId);
-        return ResponseVO.getSuccessResponseVO(vo);
-    }
 
-
-    //获取分享文件列表,传入filePid时表示分享的是文件夹，不传入filePid时表示分享文件
+    //获取分享文件列表,filePid="0"展示分享文件，传入filePid时表示分享的是目录，且访问子目录filePid下的文件
     @RequestMapping(value = "loadFileList",method = RequestMethod.POST)
-    public ResponseVO loadDataList(HttpServletRequest request,
-                                   @RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
+    public ResponseVO loadDataList(@RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize,
                                    String shareId, String filePid){
-//        String userId = CookieTools.getCookieValue(request, null, "userId", false);
         PageFileInfoVo pageInfo = fileShareService.loadDataList(pageNo,pageSize,shareId,filePid);
         return ResponseVO.getSuccessResponseVO(pageInfo);
     }

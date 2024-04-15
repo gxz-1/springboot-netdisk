@@ -78,6 +78,7 @@ public class FileShareServiceImpl implements FileShareService {
         return new PageFileInfoVo(pageInfo.getTotal(),pageInfo.getPageSize(),pageInfo.getPageNum(),pageInfo.getPages(),pageInfo.getList());
     }
 
+    //
     @Override
     public void deleteFileShareBatch(String[] shareIdArray, String userId) {
         Integer count = this.fileShareMapper.deleteFileShareBatch(shareIdArray, userId);
@@ -95,20 +96,18 @@ public class FileShareServiceImpl implements FileShareService {
             throw new BusinessException(ResponseCodeEnum.CODE_902);
         }
         //判断是否是当前用户分享的文件
+        vo.setCurrentUser(false);//在分享主页展示“保存到我的网盘”按钮
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
-        if(userId==null){
-            return vo;
-        }
-        if(userId.equals(vo.getUserId())){
-            vo.setCurrentUser(true);//展示“取消分享”按钮
-        }else {
-            vo.setCurrentUser(false);//展示“保存到我的网盘”按钮
+        if(userId!=null && userId.equals(vo.getUserId())){
+            //展示“取消分享”按钮
+            vo.setCurrentUser(true);
         }
         return vo;
     }
 
+    //外部校验提取码
     @Override
-    public void checkShareCode(HttpServletResponse response, String shareId, String code) {
+    public void checkShareCode(String shareId, String code) {
         FileShare fileShare=fileShareMapper.selectByShareId(shareId);
         //判断分享链接是否失效
         if(fileShare==null || new Date().after(fileShare.getExpireTime())){
@@ -118,10 +117,11 @@ public class FileShareServiceImpl implements FileShareService {
         if(!fileShare.getCode().equals(code)){
             throw new BusinessException(ResponseCodeEnum.CODE_903);
         }
-        //更新浏览次数(在sql语句中添加次数，避免并发问题)
+        //更新浏览次数(在sql语句中增加次数，避免并发问题)
         fileShareMapper.updateShowCountByShareId(shareId);
     }
 
+    //外部获取分享文件
     @Override
     public PageFileInfoVo loadDataList(Integer pageNo, Integer pageSize, String shareId,String filePid) {
         //校验shareId
@@ -137,9 +137,13 @@ public class FileShareServiceImpl implements FileShareService {
         String fileId = fileShare.getFileId();
         String userId = fileShare.getUserId();
         List<FileInfoVo> fileInfoVolist;
+        //TODO bug：前端每次首次加载页面时pagesize=1
+        if(pageSize==1){
+            pageSize=15;
+        }
         PageHelper.startPage(pageNo, pageSize);
         if(filePid.equals("0")){//访问根目录时，展示分享的文件或目录
-            FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, 0);
+            FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, null);
             if(info==null){
                 throw new BusinessException(ResponseCodeEnum.CODE_600);
             }

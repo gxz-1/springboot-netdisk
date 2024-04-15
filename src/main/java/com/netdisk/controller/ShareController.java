@@ -20,6 +20,7 @@ public class ShareController {
     @Autowired
     private FileShareService fileShareService;
 
+    //创建分享链接
     @RequestMapping("shareFile")
     public ResponseVO shareFile(HttpServletRequest request,String fileId,Integer validType, String code) {
         String userId = CookieTools.getCookieValue(request, null, "userId", false);
@@ -27,6 +28,7 @@ public class ShareController {
         return ResponseVO.getSuccessResponseVO(share);
     }
 
+    //展示分享列表
     @RequestMapping("loadShareList")
     public ResponseVO loadShareList(HttpServletRequest request,
                                     @RequestParam(defaultValue = "0") Integer pageNo, @RequestParam(defaultValue = "15") Integer pageSize) {
@@ -35,6 +37,7 @@ public class ShareController {
         return ResponseVO.getSuccessResponseVO(resultVO);
     }
 
+    //取消分享
     @RequestMapping("cancelShare")
     public ResponseVO cancelShare(HttpServletRequest request, String shareIds) {
         String userId = CookieTools.getCookieValue(request, null, "userId", false);

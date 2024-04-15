@@ -16,7 +16,7 @@ public interface FileShareService {
 
     ShareInfoVo getShareInfoVo(HttpServletRequest request, String shareId);
 
-    void checkShareCode(HttpServletResponse response, String shareId, String code);
+    void checkShareCode(String shareId, String code);
 
     PageFileInfoVo loadDataList(Integer pageNo, Integer pageSize, String shareId,String filePid);
 
