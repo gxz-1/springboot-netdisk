@@ -32,7 +32,7 @@ public class JwtHelper {
         String token = Jwts.builder()
                 .setSubject("YYGH-USER")
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime*1000*60)) //单位分钟
-                .claim(key1,value2)
+                .claim(key1,value1)
                 .claim(key2,value2)
                 .signWith(SignatureAlgorithm.HS512, tokenSignKey)
                 .compressWith(CompressionCodecs.GZIP)
