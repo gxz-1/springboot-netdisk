@@ -84,6 +84,8 @@ public class AsyncServiceImpl implements AsyncService {
         }
         //设置文件大小
         FileInfo info = new FileInfo();
+        info.setFileId(fileId);
+        info.setUserId(userId);
         info.setFileSize(targetFile.length());
         info.setFileCover(coverName);
         info.setStatus(2);//2转码成功 1转码失败
