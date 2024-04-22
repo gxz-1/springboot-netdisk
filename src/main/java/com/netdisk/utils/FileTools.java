@@ -37,18 +37,31 @@ public class FileTools {
         if(!tsFolder.exists()){
             tsFolder.mkdirs();
         }
-        //调用ffmpeg的命令
-        final String CMD_TRANSFER_2TS = "ffmpeg -y -i %s  -vcodec copy -acodec copy -vbsf h264_mp4toannexb %s";
-        final String CMD_CUT_TS = "ffmpeg -i %s -c copy -map 0 -f segment -segment_list %s -segment_time 30 %s/%s_%%4d.ts";
-        //生成ts文件
-        String tsPath=tsFolder+"/index.ts";
-        String cmd=String.format(CMD_TRANSFER_2TS,videoPath,tsPath);
-        ProcessUtils.executeCommand(cmd,false);
-        //生成索引文件.m3u8和切片.ts
-        cmd=String.format(CMD_CUT_TS,tsPath,tsFolder.getPath()+"/index.m3u8",tsFolder.getPath(),fileId);
-        ProcessUtils.executeCommand(cmd,false);
-        //删除index.ts
-        new File(tsPath).delete();
+        //调用ffmpeg的命令(从 ffmpeg 4.2 开始，-vbsf 参数已经被弃用。应该使用 -bsf:v 替代)
+         final String CMD_TRANSFER_2TS = "ffmpeg -y -i %s -c copy -bsf:v %s %s";
+         final String CMD_CUT_TS = "ffmpeg -i %s -c copy -map 0 -f segment -segment_list %s -segment_time 30 %s/%s_%%4d.ts";
+         final String CMD_PROBE = "ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 %s";
+         // 检测视频编码
+         String probeCmd = String.format(CMD_PROBE, videoPath);
+         String videoCodec = ProcessUtils.executeCommand(probeCmd, true);
+         // 确定合适的过滤器
+         String bsf;
+         if ("h264".equals(videoCodec)) {
+             bsf = "h264_mp4toannexb";
+         } else if ("hevc".equals(videoCodec)) {
+             bsf = "hevc_mp4toannexb";
+         } else {
+             bsf = "null";  // 无需使用过滤器
+         }
+         // 生成 ts 文件
+         String tsPath = tsFolder + "/index.ts";
+         String cmd = String.format(CMD_TRANSFER_2TS, videoPath, bsf, tsPath);
+         ProcessUtils.executeCommand(cmd, false);
+         // 生成索引文件 .m3u8 和切片 .ts
+         cmd = String.format(CMD_CUT_TS, tsPath, tsFolder.getPath() + "/index.m3u8", tsFolder.getPath(), fileId);
+         ProcessUtils.executeCommand(cmd, false);
+         // 删除 index.ts
+         new File(tsPath).delete();
     }
 
 }
