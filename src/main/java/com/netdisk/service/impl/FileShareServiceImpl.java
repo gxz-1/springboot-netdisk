@@ -146,7 +146,7 @@ public class FileShareServiceImpl implements FileShareService {
         String fileId = fileShare.getFileId();
         String userId = fileShare.getUserId();
         List<FileInfoVo> fileInfoVolist;
-        //访问根目录时，展示分享的文件或目录
+        //1.访问根目录时，展示分享的文件或目录
         if (filePid.equals("0")) {
             FileInfo info = fileInfoMapper.selectByUserIdAndFileId(fileId, userId, null);
             if (info == null) {
@@ -156,9 +156,17 @@ public class FileShareServiceImpl implements FileShareService {
             fileInfoVolist.add(new FileInfoVo(info));
             return new PageFileInfoVo(1L,15,1,1,fileInfoVolist);
         }
-        //访问分享的目录时,根据filePid展示目录下的文件
-        //TODO 校验filePid是分享的目录fileId下的文件
-        //找filePid下所有文件
+        //2.访问分享的目录时,根据filePid展示目录下的文件
+        //2.1校验filePid是分享的目录fileId下的文件
+        String folderId=filePid;
+        while(!folderId.equals(fileId)){
+            FileInfo folderInfo = fileInfoMapper.selectByUserIdAndFileId(folderId, userId, 1);
+            folderId = folderInfo.getFilePid();
+            if(folderId.equals("0")){
+                throw new BusinessException(ResponseCodeEnum.CODE_600);
+            }
+        }
+        //2.2找filePid下所有文件
         PageHelper.startPage(pageNo, pageSize);
         fileInfoVolist = fileInfoMapper.selectByUserIdAndCategory(null, userId, filePid);
         PageInfo<FileInfoVo> pageInfo = new PageInfo<>(fileInfoVolist);
