@@ -1,6 +1,7 @@
 package com.netdisk;
 
 import com.netdisk.advice.BusinessException;
+import com.netdisk.service.ScheduleService;
 import com.netdisk.utils.StringTools;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -40,4 +41,15 @@ public class SpringTest {
 //            throw new BusinessException("邮件发送失败");
 //        }
 //    }
+
+//    @Autowired
+//    ScheduleService scheduleService;
+//
+//    @Test
+//    void testSchedule(){
+//        scheduleService.deleteDatabase();
+//        scheduleService.deleteTempFile();
+//        scheduleService.deleteTrash();
+//    }
+
 }

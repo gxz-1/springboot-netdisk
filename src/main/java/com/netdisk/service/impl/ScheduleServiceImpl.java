@@ -9,10 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
+import java.io.IOException;
+import java.nio.file.*;
 
 @Service
 @Transactional
@@ -49,21 +47,32 @@ public class ScheduleServiceImpl implements ScheduleService {
     public void deleteTempFile(){
         System.out.println("-------------------------------执行临时文件清理--------------------------");
         //清理temp目录下最后修改时间超过1天的文件夹
-        Path tempDir = Paths.get(outFileFolder+"/temp");
+        Path tempDir = Paths.get(outFileFolder + "/temp");
         File[] files = tempDir.toFile().listFiles();
-        if (files != null) {
-            Arrays.stream(files).forEach(file -> {
-                try {
-                    // 检查文件的最后修改时间是否超过1天
-                    if (Files.getLastModifiedTime(file.toPath()).toMillis() < System.currentTimeMillis() - 86400000) {
-                        Files.delete(file.toPath());
-                        System.out.println("临时文件已清理: " + file.getName());
-                    }
-                } catch (Exception e) {
-                    System.err.println("临时文件清理失败: " + file.getName() + ", " + e.getMessage());
+        for (File file:files){
+            try {
+                // 检查文件的最后修改时间是否超过1天
+                if (Files.getLastModifiedTime(file.toPath()).toMillis() < System.currentTimeMillis() - 86400000) {
+                    deleteRecursively(file.toPath());
+                    System.out.println("临时文件已清理: " + file.getName());
                 }
-            });
+            } catch (Exception e) {
+                System.err.println("临时文件清理失败: " + file.getName() + ", " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            }
         }
+    }
+
+    //递归删除
+    private void deleteRecursively(Path path) throws IOException {
+        //LinkOption.NOFOLLOW_LINKS:操作将针对符号链接本身，而不是它所指向的目标
+        if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
+            try (DirectoryStream<Path> entries = Files.newDirectoryStream(path)) {
+                for (Path entry : entries) {
+                    deleteRecursively(entry);
+                }
+            }
+        }
+        Files.delete(path);  // 删除文件或现在已经为空的目录
     }
 
 }
