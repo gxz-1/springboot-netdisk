@@ -8,6 +8,7 @@ import com.netdisk.utils.JwtHelper;
 import com.netdisk.utils.StringTools;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -30,8 +31,11 @@ public class ValidationAspect {
     @Autowired
     private JwtHelper jwtHelper;
 
+    long startTime;
+
     @Before("execution(* com.netdisk.controller.AccountController.*(..))")//对controller包中AccountController类的所有参数
     private void ValidateParam(JoinPoint point){
+        startTime=new Date().getTime();
         MethodSignature methodSignature = (MethodSignature) point.getSignature();// 获取方法签名
         String methodName = methodSignature.getName();// 获取被拦截的方法名
         Class<?>[] parameterTypes = methodSignature.getParameterTypes();// 获取被拦截的方法的参数类型
@@ -67,6 +71,7 @@ public class ValidationAspect {
             "||execution(* com.netdisk.controller.RecycleController.*(..))"+
             "||execution(* com.netdisk.controller.ShareController.*(..))")
     private void checkLogin(){
+        startTime=new Date().getTime();
         //拿到request对象
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs.getRequest();
@@ -86,6 +91,17 @@ public class ValidationAspect {
             throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
     }
+
+    @After("execution(* com.netdisk.controller.AccountController.*(..))"+
+            "||execution(* com.netdisk.controller.FileInfoController.*(..))" +
+            "||execution(* com.netdisk.controller.RecycleController.*(..))"+
+            "||execution(* com.netdisk.controller.ShareController.*(..))")
+    private void testTime(JoinPoint point){
+        MethodSignature methodSignature = (MethodSignature) point.getSignature();// 获取方法签名
+        String methodName = methodSignature.getName();// 获取被拦截的方法名
+        System.out.println(methodName+"用时："+(new Date().getTime()-startTime));
+    }
+
 
     //正则匹配校验,在VerifyRegexEnum中定义了正则校验的规则
     void regexCheck(String Regex,Object value) throws BusinessException{
