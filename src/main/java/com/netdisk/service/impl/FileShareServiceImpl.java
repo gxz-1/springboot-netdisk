@@ -58,7 +58,7 @@ public class FileShareServiceImpl implements FileShareService {
             share.setExpireTime(calendar.getTime());
         }
         share.setValidType(validType);
-        //设置分享码
+        //设置提取码
         if (StringTools.isEmpty(code)) {
             share.setCode(StringTools.getRandomString(5));
         } else {
