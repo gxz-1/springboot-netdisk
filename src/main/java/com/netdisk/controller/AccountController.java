@@ -39,7 +39,7 @@ public class AccountController {
     //获取验证码图片
     @RequestMapping("checkCode")
     public void checkCode(HttpServletResponse response, Integer type) throws IOException {
-        CreateImageCode vCode = new CreateImageCode(130, 38, 5, 10);
+        CreateImageCode vCode = new CreateImageCode(130, 38, 4, 8);
         response.setHeader("Pragma", "no-cache");
         response.setHeader("Cache-Control", "no-cache");
         response.setDateHeader("Expires", 0);

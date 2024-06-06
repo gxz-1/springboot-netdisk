@@ -86,21 +86,20 @@ public class CreateImageCode {
             buffImg.setRGB(x, y, random.nextInt(255));
         }
 
-        String str1 = randomStr(codeCount);// 得到随机字符
-        this.code = str1;
+        this.code = randomStr(codeCount);// 得到随机字符
         for (int i = 0; i < codeCount; i++) {
-            String strRand = str1.substring(i, i + 1);
+            String strRand = code.substring(i, i + 1);
             g.setColor(getRandColor(1, 255));
             // g.drawString(a,x,y);
             // a为要画出来的东西，x和y表示要画的东西最左侧字符的基线位于此图形上下文坐标系的 (x, y) 位置处
-
             g.drawString(strRand, i * fontWidth + 3, codeY);
         }
     }
 
     // 得到随机字符
     private String randomStr(int n) {
-        String str1 = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
+//        String str1 = "ABCDEFGHIJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
+        String str1="123456789";
         String str2 = "";
         int len = str1.length() - 1;
         double r;
