@@ -22,4 +22,8 @@
         delete from file_share where expire_time &lt; curdate()
     </delete>
 
+    <delete id="deleteErrorFile">
+        delete from file_info where status !=2
+    </delete>
+
 </mapper>

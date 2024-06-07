@@ -9,4 +9,6 @@ public interface ScheduleMapper {
     void deleteFile();
 
     void deleteShare();
+
+    void deleteErrorFile();
 }

@@ -28,7 +28,11 @@ public class AsyncServiceImpl implements AsyncService {
     String outFileFolder;
 
     @Override
-    @Async
+    @Async("applicationTaskExecutor")
+    /**
+     * TODO applicationTaskExecutor是异步任务默认执行器,taskScheduler调度器主要用于执行定时任务
+     * 同时有异步方法和定时方法是需明确指定任务的执行器，否则报错
+     * */
     public void transferFile(String fileId, String userId) {
         String coverName = null;
         FileTypeEnums typeEnums = null;

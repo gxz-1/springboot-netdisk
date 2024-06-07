@@ -46,6 +46,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Scheduled(cron = "0 0 3 * * *")  //每天凌晨3点执行
     public void deleteTempFile(){
         System.out.println("-------------------------------执行临时文件清理--------------------------");
+        //清理数据库中转码没成功的文件信息
+        scheduleMapper.deleteErrorFile();
         //清理temp目录下最后修改时间超过1天的文件夹
         Path tempDir = Paths.get(outFileFolder + "/temp");
         File[] files = tempDir.toFile().listFiles();
@@ -62,7 +64,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
     }
 
-    //递归删除
+    //递归删除文件夹
     private void deleteRecursively(Path path) throws IOException {
         //LinkOption.NOFOLLOW_LINKS:操作将针对符号链接本身，而不是它所指向的目标
         if (Files.isDirectory(path, LinkOption.NOFOLLOW_LINKS)) {
